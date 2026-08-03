@@ -1,0 +1,68 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_reach_out/
+
+# Build outputs
+build/
+dist/
+.next/
+out/
+.docusaurus/
+.cache/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# IDE configuration
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vscode/
+!.vscode/extensions.json
+.project
+.classpath
+.settings/
+
+# Python virtual environment and caching
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+pip-log.txt
+pip-delete-this-directory.txt
+htmlcov/
+.toml
+
+# Databases and Local Storage
+*.db
+*.sqlite3
+.local_db/
+pgdata/
+redisdata/
+
+# Environment configurations containing secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key

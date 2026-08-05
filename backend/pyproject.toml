@@ -1,0 +1,42 @@
+[tool.black]
+line-length = 120
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "C4", "SIM", "RUF", "RET", "PERF", "PTH", "BLE", "LOG", "DTZ", "S", "A"]
+ignore = [
+    "E501",   # black handles line length
+    "S105",   # passwords in code (audited individually)
+    "S106",   # passwords in function calls (audited individually)
+    "B008",   # FastAPI Depends in defaults is idiomatic
+    "UP007",  # kept for readability
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "BLE", "DTZ"]
+"alembic/*" = ["S", "BLE", "E501"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "alembic"]
+# B105: example/dev credentials in schemas/auth.py and enums.py are not real
+# secrets — they are documented fixtures for tests and the fail-fast JWT
+# validator (config.py) prevents the placeholder ever shipping.
+skips = ["B105"]
+
+[tool.coverage.run]
+source = ["app", "main.py"]
+omit = ["*/test*", "tests/*", "alembic/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 0

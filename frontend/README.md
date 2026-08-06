@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vision Amanya — Frontend
 
-## Getting Started
+Next.js 16 frontend for the Vision Amanya real estate website, backed by the
+FastAPI API in [`../backend`](../backend).
 
-First, run the development server:
+> **Phase 6.2 — design system built.** Phase 6.1 delivered the production-grade
+> architecture (routing, data, auth, state, theming, SEO). Phase 6.2 added the
+> complete visual identity — design tokens, typography, and the reusable UI
+> component library, documented in the live `/styleguide`. Business pages
+> arrive in later phases (see [`docs/roadmap.md`](docs/roadmap.md)).
+
+## Stack
+
+- **Next.js 16** (App Router, `src/` dir, Turbopack, typed routes)
+- **React 19** + **TypeScript 5**
+- **Tailwind CSS v4** with a design-token system (`@theme inline`)
+- **Zustand** — client UI state (auth, theme, toasts, favourites, compare)
+- **TanStack Query** — server-state caching, retries, invalidation
+- **Axios** — HTTP client with envelope unwrapping, single-flight token
+  refresh and idempotent retries
+- **React Hook Form + Zod** — validated forms
+- **Framer Motion** — motion primitives (reduced-motion aware)
+- **Radix UI** — accessible primitives
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # set NEXT_PUBLIC_API_URL / API_URL
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Scripts:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Development server (Turbopack) |
+| `npm run build` | Production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | ESLint (includes prettier as an ESLint rule) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run format` / `format:check` | Prettier |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment
 
-## Learn More
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | yes | Public backend base (`http://localhost:8000/api/v1` in dev) |
+| `API_URL` | yes | Server-only backend base for BFF route handlers |
+| `SESSION_COOKIE_NAME` | no | httpOnly session cookie name (default `va_session`) |
+| `SESSION_MAX_AGE_SECONDS` | no | Refresh-token TTL (default 30 days) |
+| `SESSION_COOKIE_SECURE` | no | Set cookie `Secure` flag (default `true`) |
+| `SESSION_COOKIE_DOMAIN` | no | Optional cookie domain |
 
-To learn more about Next.js, take a look at the following resources:
+`NEXT_PUBLIC_*` values are validated at build time by `src/lib/env.ts`; server
+values by `src/lib/server/env.ts`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Architecture
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+See [`docs/architecture.md`](docs/architecture.md) for the full picture.
+Short version:
 
-## Deploy on Vercel
+- **BFF route handlers** (`src/app/api/*`) keep the refresh token in an
+  httpOnly cookie and call the backend server-side — the browser never sees
+  credentials.
+- **API client** (`src/api/`) unwraps the backend envelope
+  (`{ success, message, data, … }`) so services return plain data, retries
+  idempotent requests, and performs single-flight `401 → refresh → retry`.
+- **Services** (`src/services/`) are the only layer that knows endpoint URLs.
+- **Stores** (`src/store/`) hold ephemeral client state; server state lives in
+  TanStack Query.
+- **Route groups**: `(marketing)` public, `(auth)` sign-in flows,
+  `(protected)` gated by the session cookie.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Docs
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [`docs/architecture.md`](docs/architecture.md) — layers, data flow, conventions
+- [`docs/design-system.md`](docs/design-system.md) — tokens, typography, components
+- [`docs/brand-guidelines.md`](docs/brand-guidelines.md) — palette rationale, voice, do/don't
+- [`docs/motion-guidelines.md`](docs/motion-guidelines.md) — durations, easings, principles
+- [`docs/auth-flow.md`](docs/auth-flow.md) — BFF authentication flow
+- [`docs/roadmap.md`](docs/roadmap.md) — what is done and what comes next

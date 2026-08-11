@@ -35,7 +35,7 @@ export function persistBase(name: string): {
   skipHydration: true;
 } {
   return {
-    name: `vision-amanya:${name}`,
+    name: `vision-amnaya:${name}`,
     storage,
     skipHydration: true,
   };

@@ -1,10 +1,11 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Vision Amanya frontend — working rules
+# Vision Amnaya frontend — working rules
 
 ## Verification (always run after changes)
 
@@ -31,8 +32,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
   quantitative mirrors live in `src/constants/design-tokens.ts` — keep in sync.
 - **Use the design system**: import components from `@components/ui`, never
   scatter raw hex/durations/shadows in pages. Docs: `docs/design-system.md`,
-  `docs/brand-guidelines.md`, `docs/motion-guidelines.md`. The live styleguide
-  is `/styleguide` (`(design)` route group, no-index).
+  `docs/brand-guidelines.md`, `docs/motion-guidelines.md`,
+  `docs/AMNAYA_DESIGN_RULES.md` (enforced rules). The live styleguide is
+  `/styleguide` (`(design)` route group, no-index).
 - **Inverted sections**: on dark surfaces (hero, ink) use `text-neutral-50`
   variants, never `text-background` (breaks in dark mode).
 - **Motion**: consume the `animate-*` tokens and `@lib/motion` helpers — no

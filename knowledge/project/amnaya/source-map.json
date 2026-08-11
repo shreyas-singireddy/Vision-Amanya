@@ -1,0 +1,39 @@
+{
+  "sourceDocuments": [
+    {
+      "id": "main",
+      "file": "project-assets/source/amnaya-project.pdf",
+      "pages": 21,
+      "type": "image-based"
+    },
+    {
+      "id": "supplementary",
+      "file": "project-assets/source/Amnaya-Proposed-Project-At-Khajaguda.pdf",
+      "pages": 21,
+      "type": "mixed text/image"
+    }
+  ],
+  "pageMap": {
+    "1": "Project Cover / Hero",
+    "2": "Project Details & Statistics",
+    "3": "Exterior / Aerial View",
+    "4": "Exterior / Building View",
+    "5": "Exterior / Front View",
+    "6": "Architecture / Design",
+    "7": "Entrance / Landscaped Entry",
+    "8": "Lifestyle / Experience",
+    "9": "Interior / Living Space",
+    "10": "Interior / Bedroom",
+    "11": "Amenities / Overview",
+    "12": "Clubhouse / Amenities",
+    "13": "Clubhouse / Amenities Continued",
+    "14": "Pool / Rooftop",
+    "15": "Landscape / Garden",
+    "16": "Lake / View",
+    "17": "Masterplan / Layout",
+    "18": "Masterplan / Detailed",
+    "19": "Floor Plans",
+    "20": "Floor Plans / Types",
+    "21": "Location / Context"
+  }
+}

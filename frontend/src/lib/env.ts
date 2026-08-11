@@ -25,7 +25,7 @@ const envSchema = z.object({
     .url()
     .optional()
     .transform((url) => url?.replace(/\/+$/, "")),
-  NEXT_PUBLIC_APP_NAME: z.string().default("Vision Amanya"),
+  NEXT_PUBLIC_APP_NAME: z.string().default("Vision Amnaya"),
   NEXT_PUBLIC_APP_DESCRIPTION: z
     .string()
     .default("Luxury residential residences by Vision Infra Developers, Khajaguda, Hyderabad."),
@@ -55,7 +55,7 @@ export const env = parsed.data ?? {
   NEXT_PUBLIC_APP_URL: "http://localhost:3000",
   NEXT_PUBLIC_API_URL: "http://localhost:8000/api/v1",
   NEXT_PUBLIC_MEDIA_URL: undefined as string | undefined,
-  NEXT_PUBLIC_APP_NAME: "Vision Amanya",
+  NEXT_PUBLIC_APP_NAME: "Vision Amnaya",
   NEXT_PUBLIC_APP_DESCRIPTION: "",
   NEXT_PUBLIC_SUPPORTED_LOCALES: ["en"],
   NEXT_PUBLIC_DEFAULT_LOCALE: "en",

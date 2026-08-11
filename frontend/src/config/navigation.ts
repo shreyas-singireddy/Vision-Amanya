@@ -30,12 +30,19 @@ export interface NavigationConfig {
 }
 
 export const navigationConfig: NavigationConfig = {
+  /**
+   * Primary public navigation — the single-project information architecture.
+   * Amnaya is one address; the nav leads a visitor through its story:
+   * project → place → living → layout → imagery.
+   */
   main: [
     { label: "Home", href: "/" },
     { label: "The Project", href: "/project" },
+    { label: "Location", href: "/location" },
+    { label: "Amenities", href: "/amenities" },
     { label: "Residences", href: "/properties" },
+    { label: "Masterplan", href: "/masterplan" },
     { label: "Gallery", href: "/gallery" },
-    { label: "Contact", href: "/contact" },
   ],
   authenticated: [
     { label: "Dashboard", href: "/dashboard", requiresAuth: true },
@@ -49,13 +56,22 @@ export const navigationConfig: NavigationConfig = {
         { label: "Home", href: "/" },
         { label: "The Project", href: "/project" },
         { label: "Residences", href: "/properties" },
+        { label: "Amenities", href: "/amenities" },
+        { label: "Masterplan", href: "/masterplan" },
+        { label: "Gallery", href: "/gallery" },
+      ],
+    },
+    {
+      heading: "Place",
+      links: [
+        { label: "Location", href: "/location" },
+        { label: "About Vision Infra", href: "/about" },
+        { label: "Contact", href: "/contact" },
       ],
     },
     {
       heading: "Company",
       links: [
-        { label: "About", href: "/about" },
-        { label: "Contact", href: "/contact" },
         { label: "Privacy", href: "/privacy" },
         { label: "Terms", href: "/terms" },
       ],

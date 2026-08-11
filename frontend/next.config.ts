@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 /**
- * Next.js 16 configuration for the Vision Amanya frontend.
+ * Next.js 16 configuration for the Vision Amnaya frontend.
  *
  * - `typedRoutes`  → type-safe `<Link>` hrefs (the typed routes manifest is
  *   generated into `.next/types`).

@@ -74,10 +74,24 @@ export interface SectionTitleProps extends HTMLAttributes<HTMLDivElement> {
   /** Center the block (default) or align left. */
   align?: "center" | "left";
   as?: "h1" | "h2" | "h3";
+  /** Show in the inverted voice for dark surfaces (hero, dusk sections). */
+  inverted?: boolean;
 }
 
 export const SectionTitle = forwardRef<HTMLDivElement, SectionTitleProps>(
-  ({ className, eyebrow, title, description, align = "center", as = "h2", ...props }, ref) => (
+  (
+    {
+      className,
+      eyebrow,
+      title,
+      description,
+      align = "center",
+      as = "h2",
+      inverted = false,
+      ...props
+    },
+    ref
+  ) => (
     <div
       ref={ref}
       className={cn(
@@ -87,12 +101,18 @@ export const SectionTitle = forwardRef<HTMLDivElement, SectionTitleProps>(
       )}
       {...props}
     >
-      {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
-      <DisplayHeading as={as} level={2}>
+      {eyebrow ? <Eyebrow className={cn(inverted && "text-accent-400")}>{eyebrow}</Eyebrow> : null}
+      <DisplayHeading as={as} level={2} className={cn(inverted && "text-neutral-50")}>
         {title}
       </DisplayHeading>
       {description ? (
-        <p className={cn("text-lead text-muted-foreground", align === "center" && "max-w-prose")}>
+        <p
+          className={cn(
+            "text-lead",
+            inverted ? "text-neutral-50/70" : "text-muted-foreground",
+            align === "center" && "max-w-prose"
+          )}
+        >
           {description}
         </p>
       ) : null}

@@ -5,7 +5,7 @@ import { buildMetadata } from "@lib/seo";
 export const metadata: Metadata = buildMetadata({
   title: "Design System",
   description:
-    "The complete design language for Vision Amanya — tokens, typography, components and motion.",
+    "The complete design language for Vision Amnaya — tokens, typography, components and motion.",
   noIndex: true,
 });
 

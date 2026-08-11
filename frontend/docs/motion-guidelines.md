@@ -1,6 +1,6 @@
 # Motion Guidelines
 
-Motion at Amanya is quiet and expensive. This phase ships the *tokens* and
+Motion at Amnaya is quiet and expensive. This phase ships the _tokens_ and
 philosophy; Framer Motion choreography (hero reveals, parallax, page
 transitions) is implemented in the motion phase on top of these foundations.
 
@@ -18,26 +18,26 @@ transitions) is implemented in the motion phase on top of these foundations.
 
 ## Durations (`durations` in `design-tokens.ts` / `--duration-*` in CSS)
 
-| Token | ms | Use |
-| --- | --- | --- |
-| `instant` | 50 | Micro-feedback, toggles |
-| `fast` | 150 | Hover, focus, small state changes |
-| `base` | 250 | Menus, overlays, list transitions |
-| `slow` | 400 | Card hovers, section reveals |
-| `slower` | 600 | Editorial reveals, staggered lists |
-| `slowest` | 900 | Page-level transitions |
-| `luxury` | 1200 | Hero reveals, flagship moments |
+| Token     | ms   | Use                                |
+| --------- | ---- | ---------------------------------- |
+| `instant` | 50   | Micro-feedback, toggles            |
+| `fast`    | 150  | Hover, focus, small state changes  |
+| `base`    | 250  | Menus, overlays, list transitions  |
+| `slow`    | 400  | Card hovers, section reveals       |
+| `slower`  | 600  | Editorial reveals, staggered lists |
+| `slowest` | 900  | Page-level transitions             |
+| `luxury`  | 1200 | Hero reveals, flagship moments     |
 
 ## Easings (`easings` / `--ease-*`)
 
-| Token | Curve | Use |
-| --- | --- | --- |
-| `standard` | (0.4, 0, 0.2, 1) | Default interactive |
-| `decelerate` | (0, 0, 0.2, 1) | Entrances — come to rest naturally |
-| `accelerate` | (0.4, 0, 1, 1) | Exits — leave quickly |
-| `emphasize` | (0.2, 0.8, 0.2, 1) | Soft overshoot for emphasis |
-| `outExpo` | (0.16, 1, 0.3, 1) | Luxury ease-out — hero reveals, long travel |
-| `inOutEmphasized` | (0.83, 0, 0.17, 1) | Modals and drawers |
+| Token             | Curve              | Use                                         |
+| ----------------- | ------------------ | ------------------------------------------- |
+| `standard`        | (0.4, 0, 0.2, 1)   | Default interactive                         |
+| `decelerate`      | (0, 0, 0.2, 1)     | Entrances — come to rest naturally          |
+| `accelerate`      | (0.4, 0, 1, 1)     | Exits — leave quickly                       |
+| `emphasize`       | (0.2, 0.8, 0.2, 1) | Soft overshoot for emphasis                 |
+| `outExpo`         | (0.16, 1, 0.3, 1)  | Luxury ease-out — hero reveals, long travel |
+| `inOutEmphasized` | (0.83, 0, 0.17, 1) | Modals and drawers                          |
 
 Springs (`springs`): `soft` / `gentle` / `snappy`. Prefer the gentle preset
 for anything that should feel heavy and deliberate.

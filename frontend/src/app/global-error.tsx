@@ -21,7 +21,7 @@ export default function GlobalError({
   return (
     <html lang="en">
       <head>
-        <title>Vision Amanya — Error</title>
+        <title>Vision Amnaya — Error</title>
         <style>{`
           * { box-sizing: border-box; margin: 0; }
           body {

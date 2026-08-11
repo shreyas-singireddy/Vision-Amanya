@@ -40,4 +40,28 @@ export const transitionExit: Transition = {
   ease: easings.accelerate,
 };
 
+/** Flagship entrance timing — the `outExpo` luxury curve over `slowest`. */
+export const transitionLuxury: Transition = {
+  duration: durations.slowest / 1000,
+  ease: easings.outExpo,
+};
+
+/** Film-scale entrance for cinematic moments. */
+export const transitionCinematic: Transition = {
+  duration: durations.luxury / 1000,
+  ease: easings.outExpo,
+};
+
+/** Editorial entrance for section reveals. */
+export const transitionEditorial: Transition = {
+  duration: durations.slower / 1000,
+  ease: easings.outExpo,
+};
+
+/** Overlay/fixed-surface timing. */
+export const transitionOverlay: Transition = {
+  duration: durations.slow / 1000,
+  ease: easings.inOutEmphasized,
+};
+
 export const transitionSprings = springs;

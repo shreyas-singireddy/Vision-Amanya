@@ -28,7 +28,7 @@ Status of the Phase 6 foundation and what comes next.
 - **Feature foundations**: auth form schemas, project/property query hooks,
   favourite toggle hook, enquiry submission hook, assistant hook.
 - **BFF route handlers**: `api/health`, `api/auth/{login,register,refresh,
-  logout,session}`.
+logout,session}`.
 - **Routing foundation**: route groups `(marketing)`, `(auth)`, `(protected)`,
   dynamic `properties/[slug]`, `error.tsx`, `global-error.tsx`, `not-found.tsx`,
   `loading.tsx`, `proxy.ts` (security headers), `sitemap.ts`, `robots.ts`,

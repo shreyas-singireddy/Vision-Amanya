@@ -1,6 +1,6 @@
-# Brand Guidelines — Vision Amanya
+# Brand Guidelines — Vision Amnaya
 
-Vision Amanya is a luxury residential development. The brand must feel like
+Vision Amnaya is a luxury residential development. The brand must feel like
 Apple, Porsche, Aman, Four Seasons or Sotheby's — **never** a generic
 WordPress template. This document explains the palette rationale, the voice
 and the explicit do / don't list.
@@ -10,7 +10,7 @@ and the explicit do / don't list.
 Premium · Luxury · Elegant · Timeless · Sophisticated · Professional ·
 Trustworthy · Minimal · Architectural · High-end
 
-The reference imagery is an inspiration for *feeling*, never a template to
+The reference imagery is an inspiration for _feeling_, never a template to
 copy. Every surface is a modern interpretation.
 
 ## Palette rationale
@@ -18,13 +18,16 @@ copy. Every surface is a modern interpretation.
 - **Emerald `#3d8b66`** — the deep green of the surrounding landscape,
   read as longevity, trust and quiet wealth. It is the primary voice and the
   colour of the primary button, focus rings and active states.
-- **Burnished gold `#c08e2e`** — evening light on stone. Used sparingly:
-  the accent button, eyebrows, gold-gradient numerals and selected states.
-  Scarcity is what keeps it luxurious.
+- **Burnished bronze-gold `#a3744a`** — evening light on stone and bronze
+  fixtures. Used sparingly: the accent button, eyebrows, bronze-gradient
+  numerals and selected states. Scarcity is what keeps it luxurious.
 - **Warm neutrals** — stone, sand and parchment. The canvas. Warm greys
   (never blue-grey) keep interiors feeling physical and architectural.
 - **Ink & dark sections** — near-black forest tones for hero sections and
-  inverted moments, over which photography and gold glow.
+  inverted moments, over which photography and bronze-gold glow.
+- **Dusk navy** — a cool `#22303b`-family navy reserved for cinematic dark
+  moments (hero overlay, gallery, footer). Prefer it over pure black so dark
+  sections stay dimensional, not dead.
 
 ## The voice
 

@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 import { useUIStore, type Theme } from "@store/ui.store";
 
-const STORAGE_KEY = "vision-amanya:theme";
+const STORAGE_KEY = "vision-amnaya:theme";
 
 function getSystemTheme(): "light" | "dark" {
   if (typeof window === "undefined") return "light";

@@ -5,7 +5,7 @@ import { siteConfig } from "@config/site";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: siteConfig.name,
-    short_name: "Vision Amanya",
+    short_name: "Vision Amnaya",
     description: siteConfig.description,
     start_url: "/",
     display: "standalone",

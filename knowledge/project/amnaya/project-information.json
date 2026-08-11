@@ -1,0 +1,76 @@
+{
+  "project": {
+    "name": "Vision Amnaya",
+    "developer": "Vision Infra Developers",
+    "location": "Khajaguda, Hyderabad",
+    "facts": [
+      {
+        "fact": "Acreage",
+        "value": "5.3 acres",
+        "source": {
+          "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+          "page": 2
+        }
+      },
+      {
+        "fact": "Number of units",
+        "value": "420",
+        "source": {
+          "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+          "page": 2
+        }
+      },
+      {
+        "fact": "Number of floors",
+        "value": "10",
+        "source": {
+          "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+          "page": 2
+        }
+      },
+      {
+        "fact": "Unit sizes",
+        "value": "1,715 - 2,590 sq.ft.",
+        "source": {
+          "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+          "page": 2
+        }
+      },
+      {
+        "fact": "Unit type",
+        "value": "3 BHK",
+        "source": {
+          "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+          "page": 2
+        }
+      },
+      {
+        "fact": "Garden view",
+        "value": "2 acres",
+        "source": {
+          "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+          "page": 2
+        }
+      },
+      {
+        "fact": "Lake view",
+        "value": "25 acres",
+        "source": {
+          "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+          "page": 2
+        }
+      },
+      {
+        "fact": "Entrance design",
+        "value": "Double-height stilt for grand entrance view",
+        "source": {
+          "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+          "page": 2
+        }
+      }
+    ],
+    "marketing_language": [
+      "First of its kind residential project"
+    ]
+  }
+}

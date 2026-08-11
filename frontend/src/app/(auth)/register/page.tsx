@@ -13,7 +13,7 @@ export default function RegisterPage() {
   return (
     <PagePlaceholder
       eyebrow="Account"
-      title="Join Vision Amanya"
+      title="Join Vision Amnaya"
       description="The registration form (BFF /api/auth/register) mounts here in a later phase."
     />
   );

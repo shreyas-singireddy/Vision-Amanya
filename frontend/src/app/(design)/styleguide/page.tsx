@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Design System — the living styleguide for Vision Amanya.
+ * Design System — the living styleguide for Vision Amnaya.
  *
  * Every token and component is rendered live so changes in `globals.css` are
  * reflected immediately. This page is architecture-only: no business logic,
@@ -9,13 +9,16 @@
  */
 
 import { useState } from "react";
-import { ChevronDown, Settings, User, X } from "lucide-react";
+import { ChevronDown, Expand, Heart, Settings, Share2, User, X } from "lucide-react";
 
+import { BudgetSelect, DateInput, PhoneInput, PreferenceSelect } from "@components/forms";
+import { BuildingCard, FloorPlanCard, ResidenceCard, SpecList } from "@components/property";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  Alert,
   Avatar,
   Badge,
   Breadcrumbs,
@@ -54,9 +57,14 @@ import {
   ErrorState,
   Eyebrow,
   Field,
+  Grid,
+  GridItem,
+  IconButton,
+  ImageCard,
   ImageFrame,
   Input,
   Label,
+  LoadingState,
   NavLink,
   Pagination,
   Popover,
@@ -74,12 +82,15 @@ import {
   SelectValue,
   Skeleton,
   Spinner,
+  Stack,
   Stat,
   Switch,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
+  Tag,
+  TextLink,
   Textarea,
   ToggleGroup,
   ToggleGroupItem,
@@ -92,13 +103,7 @@ import { ui, useUIStore } from "@store/ui.store";
 import { routes } from "@constants/routes";
 import { cn } from "@utils/cn";
 
-const DEMO_IMAGE =
-  "data:image/svg+xml," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a3b30"/><stop offset="0.55" stop-color="#3d8b66"/><stop offset="1" stop-color="#c08e2e"/></linearGradient></defs><rect width="1600" height="900" fill="url(#g)"/><circle cx="1200" cy="190" r="170" fill="#ffffff" opacity="0.08"/><circle cx="380" cy="760" r="220" fill="#0d211a" opacity="0.35"/><rect x="0" y="740" width="1600" height="160" fill="#000000" opacity="0.28"/></svg>`
-  );
-
-const brandRamps = ["primary", "accent", "neutral"] as const;
+const brandRamps = ["primary", "accent", "neutral", "navy", "sky"] as const;
 
 function Section({
   id,
@@ -161,6 +166,9 @@ export default function StyleguidePage() {
   const [radio, setRadio] = useState("one");
   const [switched, setSwitched] = useState(true);
   const [tabs, setTabs] = useState("overview");
+  const [phone, setPhone] = useState("");
+  const [budget, setBudget] = useState("1cr-2cr");
+  const [prefs, setPrefs] = useState<string[]>(["2bhk", "pool-facing"]);
   const setTheme = useUIStore((state) => state.setTheme);
 
   return (
@@ -173,7 +181,7 @@ export default function StyleguidePage() {
             variant="outline"
             className="border-accent-500/40 bg-transparent text-accent-200"
           >
-            Vision Amanya · Phase 6
+            Vision Amnaya · Phase 6
           </Badge>
           <h1 className="mt-6 max-w-3xl font-serif text-5xl font-medium leading-[1.05] tracking-tight text-neutral-50 sm:text-6xl lg:text-7xl">
             The design language,
@@ -216,7 +224,7 @@ export default function StyleguidePage() {
             <div>
               <SubLabel>Body · Geist</SubLabel>
               <p className="max-w-md text-lg leading-relaxed text-foreground">
-                Amanya unfolds slowly — a considered landscape of light, stone and shadow where each
+                Amnaya unfolds slowly — a considered landscape of light, stone and shadow where each
                 day is an invitation to slow down.
               </p>
               <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
@@ -238,8 +246,14 @@ export default function StyleguidePage() {
                 ["display-3", "text-display-3", "Display Three"],
                 ["display-4", "text-display-4", "Display Four"],
                 ["lead", "text-lead", "Lead paragraph"],
+                ["body-large", "text-body-large", "Body large"],
                 ["base", "text-base", "Body text"],
+                ["body-small", "text-body-small", "Body small"],
                 ["caption", "text-caption", "Caption & meta"],
+                ["label", "text-label uppercase tracking-label", "LABEL"],
+                ["nav", "text-nav uppercase tracking-nav", "NAV"],
+                ["button", "text-button uppercase tracking-button", "BUTTON"],
+                ["numeric", "numeric text-numeric", "4,20,000"],
                 ["eyebrow", "text-eyebrow uppercase tracking-eyebrow", "EYEBROW"],
               ].map(([token, cls, sample]) => (
                 <div
@@ -291,6 +305,9 @@ export default function StyleguidePage() {
                 <div className="h-16 w-full rounded-lg bg-grad-gold border border-border" />
                 <div className="h-16 w-full rounded-lg bg-grad-primary border border-border" />
                 <div className="h-16 w-full rounded-lg bg-grad-surface border border-border" />
+                <div className="h-16 w-full rounded-lg bg-grad-dusk border border-border" />
+                <div className="h-16 w-full rounded-lg bg-grad-lake border border-border" />
+                <div className="h-16 w-full rounded-lg bg-grad-ink border border-border" />
               </div>
             </div>
             <div>
@@ -304,6 +321,12 @@ export default function StyleguidePage() {
                     Gradient text (primary)
                   </span>{" "}
                   for emphasis without shouting.
+                </p>
+                <p className="rounded-lg border border-border bg-surface-subtle px-4 py-3 text-sm leading-relaxed">
+                  <span className="bg-clip-text text-transparent bg-grad-ink">
+                    Gradient text (ink)
+                  </span>{" "}
+                  reserved for the darkest moments.
                 </p>
               </div>
             </div>
@@ -341,9 +364,25 @@ export default function StyleguidePage() {
                 <div className="h-24 w-24 rounded-lg bg-card shadow-card border border-border" />
                 <div className="h-24 w-24 rounded-lg bg-card shadow-elevated border border-border" />
                 <div className="h-24 w-24 rounded-lg bg-card shadow-2xl border border-border" />
+                <div className="h-24 w-24 rounded-lg bg-card shadow-cinematic border border-border" />
               </div>
+              <p className="mt-4 text-xs text-muted-foreground">
+                shadow-cinematic is reserved for full-bleed hero imagery and the gallery.
+              </p>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="mt-6">
+          <SubLabel>Glow</SubLabel>
+          <div className="flex flex-wrap gap-6">
+            <div className="h-24 w-24 rounded-lg bg-card shadow-glow-primary border border-border flex items-center justify-center text-[11px] text-muted-foreground">
+              glow-primary
+            </div>
+            <div className="h-24 w-24 rounded-lg bg-card shadow-glow-gold border border-border flex items-center justify-center text-[11px] text-muted-foreground">
+              glow-gold
+            </div>
+          </div>
         </div>
 
         <div className="mt-6">
@@ -418,8 +457,10 @@ export default function StyleguidePage() {
           <div className="space-y-3">
             {(
               [
-                ["max-w-page", "80rem"],
+                ["max-w-hero", "96rem"],
+                ["max-w-gallery", "100rem"],
                 ["max-w-wide", "88rem"],
+                ["max-w-page", "80rem"],
                 ["max-w-narrow", "72rem"],
                 ["max-w-tight", "60rem"],
                 ["max-w-prose", "42rem"],
@@ -434,7 +475,7 @@ export default function StyleguidePage() {
               />
             ))}
             <p className="text-xs text-muted-foreground">
-              {["80rem", "88rem", "72rem", "60rem", "42rem"].join(" · ")}
+              {["96rem", "100rem", "88rem", "80rem", "72rem", "60rem", "42rem"].join(" · ")}
             </p>
           </div>
         </div>
@@ -481,7 +522,7 @@ export default function StyleguidePage() {
                 variant="accent"
                 onClick={() =>
                   ui.toast({
-                    title: "Welcome to Amanya",
+                    title: "Welcome to Amnaya",
                     description: "Toasts are part of the feedback language.",
                     tone: "success",
                   })
@@ -553,7 +594,7 @@ export default function StyleguidePage() {
                   <SelectValue placeholder="Choose a residence" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="amanya">The Amanya</SelectItem>
+                  <SelectItem value="amnaya">The Amnaya</SelectItem>
                   <SelectItem value="banyan">The Banyan</SelectItem>
                   <SelectItem value="garden">The Garden House</SelectItem>
                 </SelectContent>
@@ -614,7 +655,7 @@ export default function StyleguidePage() {
               <Badge tone="accent" className="w-fit">
                 Now selling
               </Badge>
-              <CardTitle>The Amanya</CardTitle>
+              <CardTitle>The Amnaya</CardTitle>
               <CardDescription>Khajaguda · 2 &amp; 3 BHK</CardDescription>
             </CardHeader>
             <CardContent>
@@ -648,7 +689,7 @@ export default function StyleguidePage() {
           <Card>
             <CardHeader>
               <CardTitle>At a glance</CardTitle>
-              <CardDescription>Amanya by the numbers.</CardDescription>
+              <CardDescription>Amnaya by the numbers.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-6">
               <Stat label="Acres" value="4.5" />
@@ -689,7 +730,7 @@ export default function StyleguidePage() {
             items={[
               { label: "Home", href: routes.home },
               { label: "Residences", href: routes.properties },
-              { label: "The Amanya" },
+              { label: "The Amnaya" },
             ]}
           />
 
@@ -738,7 +779,7 @@ export default function StyleguidePage() {
               <DialogHeader>
                 <DialogTitle>Book a private viewing</DialogTitle>
                 <DialogDescription>
-                  A member of the Amanya concierge will be in touch within one working day.
+                  A member of the Amnaya concierge will be in touch within one working day.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-2">
@@ -832,7 +873,7 @@ export default function StyleguidePage() {
             className="max-w-xl rounded-card border border-border px-6"
           >
             <AccordionItem value="a">
-              <AccordionTrigger>What is Amanya?</AccordionTrigger>
+              <AccordionTrigger>What is Amnaya?</AccordionTrigger>
               <AccordionContent>
                 A composed enclave of residences in Khajaguda, designed around light, water and
                 silence.
@@ -923,6 +964,275 @@ export default function StyleguidePage() {
       </Section>
 
       <Section
+        id="primitives"
+        label="Primitives"
+        title="Small pieces, one voice."
+        description="Tags, links, alerts and icon controls — the vocabulary used inside every larger composition."
+      >
+        <div className="grid gap-10 lg:grid-cols-2">
+          <div>
+            <SubLabel>Tags</SubLabel>
+            <div className="flex flex-wrap items-center gap-2">
+              <Tag tone="neutral">2 BHK</Tag>
+              <Tag tone="primary">Furnished</Tag>
+              <Tag tone="accent">Pool-facing</Tag>
+              <Tag tone="navy">Corner unit</Tag>
+            </div>
+          </div>
+
+          <div>
+            <SubLabel>Text links</SubLabel>
+            <div className="space-y-3">
+              <div>
+                <TextLink href={routes.properties}>View all residences</TextLink>
+              </div>
+              <div>
+                <TextLink href={routes.gallery} arrow="up-right">
+                  Open the gallery
+                </TextLink>
+              </div>
+              <div>
+                <TextLink href={routes.about} arrow="none">
+                  Quiet, arrowless link
+                </TextLink>
+              </div>
+              <div>
+                <TextLink href="https://example.com" arrow="up-right">
+                  External source
+                </TextLink>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <SubLabel>Alerts</SubLabel>
+            <div className="space-y-3">
+              <Alert
+                tone="info"
+                title="Visit booked"
+                description="Our concierge will confirm by email within one working day."
+              />
+              <Alert
+                tone="success"
+                title="Enquiry received"
+                description="We have your details and will be in touch shortly."
+              />
+              <Alert
+                tone="warning"
+                title="Phase 2 nearly full"
+                description="Only a handful of 3 BHK units remain in this phase."
+              />
+              <Alert
+                tone="error"
+                title="Could not submit"
+                description="Check your phone number and try again."
+              />
+            </div>
+          </div>
+
+          <div>
+            <SubLabel>Icon buttons</SubLabel>
+            <div className="flex flex-wrap items-center gap-2">
+              <IconButton icon={Heart} aria-label="Favourite" variant="soft" />
+              <IconButton icon={Share2} aria-label="Share" variant="outline" />
+              <IconButton icon={Expand} aria-label="Expand" variant="ghost" />
+              <IconButton icon={X} aria-label="Close" variant="ghost" />
+              <div className="bg-navy-900 rounded-lg px-2 py-2">
+                <IconButton icon={Heart} aria-label="Favourite on dark" variant="glass" />
+              </div>
+              <IconButton icon={Heart} aria-label="Favourite solid" variant="solid" size="lg" />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-10">
+          <SubLabel>Grid &amp; Stack</SubLabel>
+          <Grid cols={{ base: 1, lg: 12 }} gap="md">
+            <GridItem span={{ base: 12, lg: 7 }}>
+              <div className="rounded-lg border border-border bg-surface-subtle px-4 py-6 font-serif text-lg text-foreground">
+                Editorial column — span 7 of 12 on desktop.
+              </div>
+            </GridItem>
+            <GridItem span={{ base: 12, lg: 5 }}>
+              <div className="rounded-lg border border-border bg-surface-subtle px-4 py-6 font-serif text-lg text-foreground">
+                Companion column — span 5.
+              </div>
+            </GridItem>
+          </Grid>
+          <div className="mt-6">
+            <Stack
+              direction="row"
+              gap="sm"
+              align="center"
+              wrap
+              className="rounded-lg border border-border bg-surface-subtle px-4 py-4"
+            >
+              <Tag tone="primary">Lake-facing</Tag>
+              <Tag tone="neutral">2,590 sq.ft.</Tag>
+              <Tag tone="navy">10th floor</Tag>
+            </Stack>
+          </div>
+        </div>
+      </Section>
+
+      <Section
+        id="forms-enquiry"
+        label="Enquiry"
+        title="Purpose-built controls."
+        description="Phone, date, budget and preference inputs — the quiet machinery of a reservation."
+      >
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div className="space-y-6">
+            <Field label="Phone">
+              <PhoneInput value={phone} onChange={setPhone} />
+            </Field>
+            <Field label="Preferred visit date" hint="We confirm within one working day.">
+              <DateInput />
+            </Field>
+          </div>
+          <div className="space-y-6">
+            <div>
+              <SubLabel>Budget</SubLabel>
+              <BudgetSelect value={budget} onChange={setBudget} />
+            </div>
+            <div>
+              <SubLabel>Interests</SubLabel>
+              <PreferenceSelect
+                value={prefs}
+                onChange={setPrefs}
+                options={[
+                  { value: "2bhk", label: "2 BHK" },
+                  { value: "3bhk", label: "3 BHK" },
+                  { value: "lake-facing", label: "Lake-facing" },
+                  { value: "pool-facing", label: "Pool-facing" },
+                  { value: "ready", label: "Ready to move" },
+                ]}
+              />
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section
+        id="property"
+        label="Property"
+        title="Residences, plans, towers."
+        description="The listing vocabulary — rendered here with the real project imagery."
+      >
+        <div className="space-y-4">
+          <SubLabel>Residence cards</SubLabel>
+          <Grid cols={{ base: 1, sm: 2, lg: 3 }} gap="md">
+            <ResidenceCard
+              src="/assets/amnaya/renders/building-day.jpg"
+              alt="Residence render at day"
+              title="The Amnaya"
+              subtitle="Khajaguda · 3 BHK"
+              price="₹1.6 Cr"
+              area="1,715 sq.ft."
+              beds={3}
+              baths={3}
+              badge="phase-open"
+            />
+            <ResidenceCard
+              src="/assets/amnaya/renders/dusk-building.jpg"
+              alt="Residence render at dusk"
+              title="The Banyan"
+              subtitle="Khajaguda · 3 &amp; 4 BHK"
+              price="₹2.4 Cr"
+              area="2,590 sq.ft."
+              beds={4}
+              baths={4}
+              badge="available"
+            />
+            <ResidenceCard
+              src="/assets/amnaya/renders/lake-view.jpg"
+              alt="Lake-view residence"
+              title="The Garden House"
+              subtitle="Khajaguda · 2 BHK"
+              price="₹1.2 Cr"
+              area="1,240 sq.ft."
+              beds={2}
+              baths={2}
+              badge="sold-out"
+            />
+          </Grid>
+        </div>
+
+        <div className="mt-10 space-y-4">
+          <SubLabel>Floor plans</SubLabel>
+          <Grid cols={{ base: 2, sm: 3, lg: 4 }} gap="md">
+            <FloorPlanCard
+              src="/assets/amnaya/floorplans/amnaya-floorplans-01.jpeg"
+              alt="2 BHK floor plan"
+              type="2 BHK"
+              area="1,240 sq.ft."
+              note="Lake-facing"
+            />
+            <FloorPlanCard
+              src="/assets/amnaya/floorplans/amnaya-floorplans-01.jpeg"
+              alt="3 BHK floor plan"
+              type="3 BHK"
+              area="1,715 sq.ft."
+              note="Corner"
+            />
+            <FloorPlanCard
+              src="/assets/amnaya/floorplans/amnaya-floorplans-01.jpeg"
+              alt="3 BHK floor plan"
+              type="3 BHK"
+              area="1,890 sq.ft."
+              note="East wing"
+            />
+            <FloorPlanCard
+              src="/assets/amnaya/floorplans/amnaya-floorplans-01.jpeg"
+              alt="4 BHK floor plan"
+              type="4 BHK"
+              area="2,590 sq.ft."
+              note="Podium level"
+            />
+          </Grid>
+        </div>
+
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+          <div>
+            <SubLabel>Specifications</SubLabel>
+            <div className="rounded-card border border-border bg-card p-6">
+              <SpecList
+                items={[
+                  { label: "Configuration", value: "3 BHK" },
+                  { label: "Carpet area", value: "1,715 sq.ft." },
+                  { label: "Floor", value: "8 of 10" },
+                  { label: "Bathrooms", value: "3" },
+                  { label: "Balconies", value: "2" },
+                  { label: "Furnishing", value: "Unfurnished" },
+                  { label: "Possession", value: "Q4 2027" },
+                  { label: "Facing", value: "Lake" },
+                ]}
+              />
+            </div>
+          </div>
+          <div>
+            <SubLabel>Towers</SubLabel>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <BuildingCard
+                title="The Amnaya"
+                description="First of its kind — 2 acres of garden with 25 acres of lake view."
+                status="phase-open"
+                residences={140}
+                floors={10}
+              />
+              <BuildingCard
+                title="The Banyan"
+                description="Corner residences with full-height glass and private terraces."
+                status="launching"
+                residences={160}
+                floors={10}
+              />
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section
         id="media"
         label="Media"
         title="The photography frame."
@@ -930,14 +1240,14 @@ export default function StyleguidePage() {
       >
         <div className="grid gap-6 md:grid-cols-3">
           <ImageFrame
-            src={DEMO_IMAGE}
+            src="/assets/amnaya/hero/amnaya-hero-01.jpeg"
             alt="Architectural study"
             aspect="portrait"
             caption="The entrance"
             captionDetail="Study 01"
           />
           <ImageFrame
-            src={DEMO_IMAGE}
+            src="/assets/amnaya/renders/hero-day.jpg"
             alt="Architectural study"
             aspect="square"
             variant="card"
@@ -945,7 +1255,7 @@ export default function StyleguidePage() {
             captionDetail="Study 02"
           />
           <ImageFrame
-            src={DEMO_IMAGE}
+            src="/assets/amnaya/pool/amnaya-pool-01.jpeg"
             alt="Architectural study"
             aspect="landscape"
             caption="Lake light"
@@ -954,19 +1264,40 @@ export default function StyleguidePage() {
         </div>
         <div className="mt-6">
           <ImageFrame
-            src={DEMO_IMAGE}
+            src="/assets/amnaya/renders/panorama.jpg"
             alt="Hero architectural study"
             aspect="cinematic"
             variant="hero"
-            caption="Amanya at dusk"
+            caption="Amnaya at dusk"
             captionDetail="The signature frame"
           />
+        </div>
+
+        <div className="mt-10">
+          <SubLabel>ImageCard — overlay treatment</SubLabel>
+          <ImageCard
+            src="/assets/amnaya/landscape/amnaya-landscape-01.jpeg"
+            alt="Landscape amenity"
+            aspect="wide"
+          >
+            <Tag tone="primary" className="w-fit">
+              Landscaped gardens
+            </Tag>
+            <h3 className="font-serif text-2xl font-semibold leading-snug text-neutral-50">
+              Two acres of garden, twenty-five of lake.
+            </h3>
+          </ImageCard>
+        </div>
+
+        <div className="mt-10">
+          <SubLabel>Loading state</SubLabel>
+          <LoadingState label="Loading residences" />
         </div>
       </Section>
 
       <footer className="border-t border-border">
         <Container size="page" className="flex flex-col items-center gap-2 py-12 text-center">
-          <p className="font-serif text-2xl text-foreground">Vision Amanya</p>
+          <p className="font-serif text-2xl text-foreground">Vision Amnaya</p>
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
             Every element above is a live component from the design system — edit the tokens in{" "}
             <code className="text-xs">globals.css</code> and this page follows.

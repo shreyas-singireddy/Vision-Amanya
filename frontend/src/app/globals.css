@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Vision Amanya — Design Tokens, Theming & Base Styles
+   Vision Amnaya — Design Tokens, Theming & Base Styles
    --------------------------------------------------------------------------
    The complete visual language for the brand lives here as CSS custom
    properties (light on :root, dark on .dark) and is re-exported to Tailwind
@@ -12,10 +12,16 @@
 
    Docs: `docs/design-system.md` (tokens, type, spacing, components)
          `docs/brand-guidelines.md` (palette rationale, voice)
+         `docs/AMNAYA_DESIGN_RULES.md` (design rules)
          `docs/motion-guidelines.md` (durations, easings, principles)
    ========================================================================== */
 
 @import "tailwindcss";
+
+/* Lenis base styles — required for correct scroll limits when `<html>`
+   carries `h-full`, plus stopped/prevent/iframe handling during smooth
+   scroll. Mounted by `useSmoothScroll` in `RootProvider`. */
+@import "lenis/dist/lenis.css";
 
 /* Class-based dark mode (`.dark` is toggled by the theme provider). */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -41,6 +47,17 @@
   --surface-raised: #ffffff;
   --surface-subtle: #f6f4ef;
 
+  /* Semantic surface/foreground roles (aliases for the token model). */
+  --background-secondary: #f4f2ec;
+  --surface: var(--card);
+  --surface-elevated: var(--surface-raised);
+  --foreground-muted: var(--muted-foreground);
+  --foreground-subtle: #8b8476;
+  --border-subtle: #ece9e1;
+  --accent-hover: var(--accent-600);
+  --accent-muted: var(--accent-100);
+  --overlay: var(--overlay-solid);
+
   /* --- Primary — deep emerald (luxury residential) ----------------------- */
   --primary-50: #f0f7f3;
   --primary-100: #dceee3;
@@ -54,18 +71,20 @@
   --primary-900: #1a3b30;
   --primary-950: #0d211a;
 
-  /* --- Accent — burnished gold ------------------------------------------ */
-  --accent-50: #fbf7ec;
-  --accent-100: #f6ecd1;
-  --accent-200: #ecd8a3;
-  --accent-300: #e0be6e;
-  --accent-400: #d4a646;
-  --accent-500: #c08e2e;
-  --accent-600: #a57326;
-  --accent-700: #845823;
-  --accent-800: #6d4823;
-  --accent-900: #5d3d21;
-  --accent-950: #361f0f;
+  /* --- Accent — burnished bronze ----------------------------------------- */
+  /* Read from the project's bronze/brown architectural accents. Kept warm,
+     metallic and sparing — never decorative gold. */
+  --accent-50: #faf7f2;
+  --accent-100: #f3ece1;
+  --accent-200: #e6d8c4;
+  --accent-300: #d3bb9c;
+  --accent-400: #b9926c;
+  --accent-500: #a3744a;
+  --accent-600: #865c39;
+  --accent-700: #6d4a2e;
+  --accent-800: #583c27;
+  --accent-900: #473121;
+  --accent-950: #2a1d14;
 
   /* --- Neutral — warm greys --------------------------------------------- */
   --neutral-50: #f8f7f4;
@@ -79,6 +98,32 @@
   --neutral-800: #45423b;
   --neutral-900: #2c2a26;
   --neutral-950: #191815;
+
+  /* --- Dusk navy — cinematic dark sections (from the dusk renders) ------- */
+  --navy-50: #eef3f6;
+  --navy-100: #d6e2e9;
+  --navy-200: #adc5d3;
+  --navy-300: #7fa3b8;
+  --navy-400: #4d7f9c;
+  --navy-500: #2b5f80;
+  --navy-600: #17455f;
+  --navy-700: #0f354a;
+  --navy-800: #0a283a;
+  --navy-900: #071d2b;
+  --navy-950: #04121c;
+
+  /* --- Sky & lake — daylight, water, air (from the daylight renders) ----- */
+  --sky-50: #f4f8fb;
+  --sky-100: #e6eef5;
+  --sky-200: #cdddea;
+  --sky-300: #a8c4d9;
+  --sky-400: #84a8c4;
+  --sky-500: #648bac;
+  --sky-600: #4d6f8f;
+  --sky-700: #3f5a75;
+  --sky-800: #354b60;
+  --sky-900: #2d3f51;
+  --sky-950: #1e2936;
 
   /* --- Semantic ---------------------------------------------------------- */
   --success-50: #effaf3;
@@ -118,7 +163,12 @@
   --overlay-solid-strong: rgb(10 26 20 / 0.78);
   --overlay-ink: linear-gradient(to top, rgb(10 26 20 / 0.85), rgb(10 26 20 / 0) 60%);
   --overlay-card: linear-gradient(to top, rgb(10 26 20 / 0.72), rgb(10 26 20 / 0) 52%);
-  --overlay-hero: linear-gradient(to top, rgb(13 33 26 / 0.82), rgb(13 33 26 / 0.18) 55%, rgb(13 33 26 / 0.6));
+  --overlay-hero: linear-gradient(
+    to top,
+    rgb(13 33 26 / 0.82),
+    rgb(13 33 26 / 0.18) 55%,
+    rgb(13 33 26 / 0.6)
+  );
 
   /* --- Glass ------------------------------------------------------------- */
   --glass-bg: rgb(255 255 255 / 0.72);
@@ -129,10 +179,12 @@
   /* --- Gradients --------------------------------------------------------- */
   --gradient-hero: linear-gradient(165deg, #1f4838 0%, #1a3b30 42%, #0d211a 78%, #191817 100%);
   --gradient-primary: linear-gradient(135deg, #3d8b66 0%, #255a44 100%);
-  --gradient-gold: linear-gradient(120deg, #ecd8a3 0%, #c08e2e 45%, #845823 100%);
+  --gradient-gold: linear-gradient(120deg, #e6d8c4 0%, #a3744a 45%, #6d4a2e 100%);
   --gradient-surface: linear-gradient(180deg, #ffffff 0%, #f1efe9 100%);
   --gradient-ink: linear-gradient(135deg, #191917 0%, #2c2a26 100%);
-  --gradient-text-gold: linear-gradient(105deg, #a57326 0%, #c08e2e 40%, #e0be6e 70%, #845823 100%);
+  --gradient-text-gold: linear-gradient(105deg, #865c39 0%, #a3744a 40%, #d3bb9c 70%, #6d4a2e 100%);
+  --gradient-dusk: linear-gradient(160deg, #0f354a 0%, #071d2b 45%, #04121c 78%, #191817 100%);
+  --gradient-lake: linear-gradient(160deg, #e6eef5 0%, #a8c4d9 42%, #648bac 78%, #4d6f8f 100%);
 
   /* --- Motion ------------------------------------------------------------ */
   --duration-instant: 50ms;
@@ -160,10 +212,14 @@
   --shadow-soft: 0 2px 16px -2px rgb(25 25 23 / 0.08);
   --shadow-card: 0 1px 2px rgb(25 25 23 / 0.05), 0 12px 32px -16px rgb(13 33 26 / 0.18);
   --shadow-elevated: 0 24px 48px -16px rgb(13 33 26 / 0.3);
+  --shadow-subtle: 0 1px 2px 0 rgb(25 25 23 / 0.04), 0 2px 8px -1px rgb(25 25 23 / 0.05);
+  --shadow-modal: 0 8px 16px -4px rgb(25 25 23 / 0.12), 0 32px 64px -16px rgb(13 33 26 / 0.32);
+  --shadow-cinematic: 0 2px 12px rgb(7 29 43 / 0.18), 0 48px 96px -24px rgb(7 29 43 / 0.5);
   --shadow-glow-primary: 0 0 0 4px rgb(61 139 102 / 0.16), 0 12px 32px -10px rgb(44 111 82 / 0.35);
-  --shadow-glow-gold: 0 0 0 4px rgb(192 142 46 / 0.16), 0 12px 32px -10px rgb(165 115 38 / 0.3);
+  --shadow-glow-gold: 0 0 0 4px rgb(163 116 74 / 0.16), 0 12px 32px -10px rgb(134 92 57 / 0.3);
 
   /* --- Radius ------------------------------------------------------------ */
+  --radius-none: 0;
   --radius-xs: 0.375rem;
   --radius-sm: 0.5rem;
   --radius-md: 0.625rem;
@@ -191,16 +247,30 @@
   --z-skip-link: 100;
 
   /* --- Layout ------------------------------------------------------------ */
-  --container-page: 80rem;    /* 1280 */
-  --container-wide: 88rem;    /* 1408 */
-  --container-narrow: 72rem;  /* 1152 */
-  --container-tight: 60rem;   /* 960  */
-  --container-prose: 42rem;   /* 672  — editorial measure */
+  --container-page: 80rem; /* 1280 — default content width        */
+  --container-wide: 88rem; /* 1408 — wide content                 */
+  --container-narrow: 72rem; /* 1152 — narrower content             */
+  --container-tight: 60rem; /* 960  — form/reading focused         */
+  --container-prose: 42rem; /* 672  — editorial measure            */
+  --container-hero: 96rem; /* 1536 — cinematic hero / full sections */
+  --container-gallery: 100rem; /* 1600 — gallery & full-bleed moments */
 
   /* Section rhythm — vertical breathing room per page section. */
-  --section-pad-sm: 4rem;     /* 64  */
-  --section-pad: 6rem;        /* 96  */
-  --section-pad-lg: 8rem;     /* 128 */
+  --section-pad-sm: 4rem; /* 64  */
+  --section-pad: 6rem; /* 96  */
+  --section-pad-lg: 8rem; /* 128 */
+
+  /* --- Spacing scale (semantic) ------------------------------------------ */
+  --space-2xs: 0.25rem; /* 4   */
+  --space-xs: 0.5rem; /* 8   */
+  --space-sm: 0.75rem; /* 12  */
+  --space-md: 1rem; /* 16  */
+  --space-lg: 1.5rem; /* 24  */
+  --space-xl: 2rem; /* 32  */
+  --space-2xl: 2.5rem; /* 40  */
+  --space-3xl: 3rem; /* 48  */
+  --space-4xl: 4rem; /* 64  */
+  --space-5xl: 5rem; /* 80  */
 
   color-scheme: light;
 }
@@ -224,6 +294,16 @@
   --surface-raised: #20201c;
   --surface-subtle: #171714;
 
+  --background-secondary: #171714;
+  --surface: var(--card);
+  --surface-elevated: var(--surface-raised);
+  --foreground-muted: var(--muted-foreground);
+  --foreground-subtle: #8f8c82;
+  --border-subtle: #2e2d28;
+  --accent-hover: var(--accent-500);
+  --accent-muted: var(--accent-900);
+  --overlay: var(--overlay-solid);
+
   --primary-50: #12241c;
   --primary-100: #1a3528;
   --primary-200: #224737;
@@ -236,17 +316,17 @@
   --primary-900: #dcede7;
   --primary-950: #f0f7f3;
 
-  --accent-50: #2a1c0c;
-  --accent-100: #402a12;
-  --accent-200: #57391a;
-  --accent-300: #704a22;
-  --accent-400: #8a5f2c;
-  --accent-500: #a57326;
-  --accent-600: #c08e2e;
-  --accent-700: #d4a646;
-  --accent-800: #e0be6e;
-  --accent-900: #ecd8a3;
-  --accent-950: #f6ecd1;
+  --accent-50: #2a1d14;
+  --accent-100: #3d2b1e;
+  --accent-200: #513828;
+  --accent-300: #664734;
+  --accent-400: #7d5a41;
+  --accent-500: #9a7352;
+  --accent-600: #b9926c;
+  --accent-700: #d3bb9c;
+  --accent-800: #e6d8c4;
+  --accent-900: #f3ece1;
+  --accent-950: #faf7f2;
 
   --neutral-50: #161614;
   --neutral-100: #1f1f1c;
@@ -259,6 +339,30 @@
   --neutral-800: #d0cdc2;
   --neutral-900: #e9e7df;
   --neutral-950: #f5f4f0;
+
+  --navy-50: #04121c;
+  --navy-100: #071d2b;
+  --navy-200: #0a283a;
+  --navy-300: #0f354a;
+  --navy-400: #17455f;
+  --navy-500: #2b5f80;
+  --navy-600: #4d7f9c;
+  --navy-700: #7fa3b8;
+  --navy-800: #adc5d3;
+  --navy-900: #d6e2e9;
+  --navy-950: #eef3f6;
+
+  --sky-50: #1e2936;
+  --sky-100: #2d3f51;
+  --sky-200: #354b60;
+  --sky-300: #3f5a75;
+  --sky-400: #4d6f8f;
+  --sky-500: #648bac;
+  --sky-600: #84a8c4;
+  --sky-700: #a8c4d9;
+  --sky-800: #cdddea;
+  --sky-900: #e6eef5;
+  --sky-950: #f4f8fb;
 
   --success-50: #0d2417;
   --success-100: #143a24;
@@ -296,7 +400,12 @@
   --overlay-solid-strong: rgb(8 20 16 / 0.86);
   --overlay-ink: linear-gradient(to top, rgb(8 20 16 / 0.92), rgb(8 20 16 / 0) 62%);
   --overlay-card: linear-gradient(to top, rgb(8 20 16 / 0.8), rgb(8 20 16 / 0) 55%);
-  --overlay-hero: linear-gradient(to top, rgb(8 20 16 / 0.86), rgb(8 20 16 / 0.22) 55%, rgb(8 20 16 / 0.65));
+  --overlay-hero: linear-gradient(
+    to top,
+    rgb(8 20 16 / 0.86),
+    rgb(8 20 16 / 0.22) 55%,
+    rgb(8 20 16 / 0.65)
+  );
 
   --glass-bg: rgb(26 26 23 / 0.66);
   --glass-bg-strong: rgb(26 26 23 / 0.84);
@@ -305,10 +414,12 @@
 
   --gradient-hero: linear-gradient(165deg, #1a3528 0%, #12241c 45%, #0a1410 80%, #0f0f0d 100%);
   --gradient-primary: linear-gradient(135deg, #3a7357 0%, #1a3528 100%);
-  --gradient-gold: linear-gradient(120deg, #8a5f2c 0%, #c08e2e 45%, #e0be6e 100%);
+  --gradient-gold: linear-gradient(120deg, #513828 0%, #9a7352 45%, #e6d8c4 100%);
   --gradient-surface: linear-gradient(180deg, #1a1a17 0%, #121210 100%);
   --gradient-ink: linear-gradient(135deg, #ecece6 0%, #d0cdc2 100%);
-  --gradient-text-gold: linear-gradient(105deg, #d4a646 0%, #e0be6e 40%, #f6ecd1 70%, #c08e2e 100%);
+  --gradient-text-gold: linear-gradient(105deg, #b9926c 0%, #d3bb9c 40%, #f3ece1 70%, #9a7352 100%);
+  --gradient-dusk: linear-gradient(160deg, #17455f 0%, #071d2b 45%, #04121c 80%, #0f0f0d 100%);
+  --gradient-lake: linear-gradient(160deg, #2d3f51 0%, #17455f 42%, #4d6f8f 78%, #648bac 100%);
 
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
@@ -319,8 +430,11 @@
   --shadow-soft: 0 2px 16px -2px rgb(0 0 0 / 0.5);
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -16px rgb(0 0 0 / 0.6);
   --shadow-elevated: 0 24px 48px -16px rgb(0 0 0 / 0.7);
+  --shadow-subtle: 0 1px 2px 0 rgb(0 0 0 / 0.35), 0 2px 8px -1px rgb(0 0 0 / 0.4);
+  --shadow-modal: 0 8px 16px -4px rgb(0 0 0 / 0.45), 0 32px 64px -16px rgb(0 0 0 / 0.7);
+  --shadow-cinematic: 0 2px 12px rgb(0 0 0 / 0.4), 0 48px 96px -24px rgb(0 0 0 / 0.75);
   --shadow-glow-primary: 0 0 0 4px rgb(102 163 131 / 0.18), 0 12px 32px -10px rgb(0 0 0 / 0.7);
-  --shadow-glow-gold: 0 0 0 4px rgb(192 142 46 / 0.18), 0 12px 32px -10px rgb(0 0 0 / 0.7);
+  --shadow-glow-gold: 0 0 0 4px rgb(163 116 74 / 0.18), 0 12px 32px -10px rgb(0 0 0 / 0.7);
 
   color-scheme: dark;
 }
@@ -342,6 +456,17 @@
   --color-surface-active: var(--surface-active);
   --color-surface-raised: var(--surface-raised);
   --color-surface-subtle: var(--surface-subtle);
+
+  /* Semantic role aliases */
+  --color-background-secondary: var(--background-secondary);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-subtle: var(--foreground-subtle);
+  --color-border-subtle: var(--border-subtle);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-muted: var(--accent-muted);
+  --color-overlay: var(--overlay);
 
   /* Brand palettes */
   --color-primary-50: var(--primary-50);
@@ -379,6 +504,32 @@
   --color-neutral-800: var(--neutral-800);
   --color-neutral-900: var(--neutral-900);
   --color-neutral-950: var(--neutral-950);
+
+  /* Dusk navy — cinematic dark surfaces */
+  --color-navy-50: var(--navy-50);
+  --color-navy-100: var(--navy-100);
+  --color-navy-200: var(--navy-200);
+  --color-navy-300: var(--navy-300);
+  --color-navy-400: var(--navy-400);
+  --color-navy-500: var(--navy-500);
+  --color-navy-600: var(--navy-600);
+  --color-navy-700: var(--navy-700);
+  --color-navy-800: var(--navy-800);
+  --color-navy-900: var(--navy-900);
+  --color-navy-950: var(--navy-950);
+
+  /* Sky & lake — daylight, water */
+  --color-sky-50: var(--sky-50);
+  --color-sky-100: var(--sky-100);
+  --color-sky-200: var(--sky-200);
+  --color-sky-300: var(--sky-300);
+  --color-sky-400: var(--sky-400);
+  --color-sky-500: var(--sky-500);
+  --color-sky-600: var(--sky-600);
+  --color-sky-700: var(--sky-700);
+  --color-sky-800: var(--sky-800);
+  --color-sky-900: var(--sky-900);
+  --color-sky-950: var(--sky-950);
 
   --color-success-50: var(--success-50);
   --color-success-100: var(--success-100);
@@ -423,16 +574,16 @@
   --font-display: var(--font-serif);
 
   /* Typography scale — semantic type roles */
-  --text-display-1: 3.5rem;
+  --text-display-1: clamp(2.75rem, 2rem + 4vw, 4.5rem);
   --text-display-1--line-height: 1.04;
   --text-display-1--letter-spacing: -0.02em;
-  --text-display-2: 3rem;
+  --text-display-2: clamp(2.375rem, 1.75rem + 3vw, 3.5rem);
   --text-display-2--line-height: 1.06;
   --text-display-2--letter-spacing: -0.015em;
-  --text-display-3: 2.5rem;
+  --text-display-3: clamp(2rem, 1.5rem + 2.5vw, 2.75rem);
   --text-display-3--line-height: 1.1;
   --text-display-3--letter-spacing: -0.01em;
-  --text-display-4: 2rem;
+  --text-display-4: clamp(1.75rem, 1.375rem + 1.5vw, 2.25rem);
   --text-display-4--line-height: 1.15;
   --text-display-4--letter-spacing: -0.01em;
   --text-eyebrow: 0.75rem;
@@ -443,8 +594,23 @@
   --text-overline--letter-spacing: 0.22em;
   --text-lead: 1.125rem;
   --text-lead--line-height: 1.75;
+  --text-body-large: 1.0625rem;
+  --text-body-large--line-height: 1.65;
+  --text-body: 1rem;
+  --text-body--line-height: 1.65;
+  --text-body-small: 0.9375rem;
+  --text-body-small--line-height: 1.6;
   --text-caption: 0.8125rem;
   --text-caption--line-height: 1.5;
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.35;
+  --text-nav: 0.875rem;
+  --text-nav--line-height: 1.2;
+  --text-button: 0.875rem;
+  --text-button--line-height: 1.1;
+  --text-numeric: clamp(2.5rem, 1.75rem + 2.5vw, 3.5rem);
+  --text-numeric--line-height: 1.05;
+  --text-numeric--letter-spacing: -0.01em;
   --text-quote: 1.5rem;
   --text-quote--line-height: 1.5;
   --text-quote--letter-spacing: 0.005em;
@@ -454,6 +620,9 @@
   --tracking-eyebrow: 0.18em;
   --tracking-overline: 0.22em;
   --tracking-caps: 0.12em;
+  --tracking-nav: 0.08em;
+  --tracking-button: 0.04em;
+  --tracking-label: 0.06em;
 
   /* Motion */
   --duration-instant: var(--duration-instant);
@@ -481,10 +650,14 @@
   --shadow-soft: var(--shadow-soft);
   --shadow-card: var(--shadow-card);
   --shadow-elevated: var(--shadow-elevated);
+  --shadow-subtle: var(--shadow-subtle);
+  --shadow-modal: var(--shadow-modal);
+  --shadow-cinematic: var(--shadow-cinematic);
   --shadow-glow-primary: var(--shadow-glow-primary);
   --shadow-glow-gold: var(--shadow-glow-gold);
 
   /* Radius */
+  --radius-none: var(--radius-none);
   --radius-xs: var(--radius-xs);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -517,6 +690,48 @@
   --container-narrow: var(--container-narrow);
   --container-tight: var(--container-tight);
   --container-prose: var(--container-prose);
+  --container-hero: var(--container-hero);
+  --container-gallery: var(--container-gallery);
+
+  /* Semantic spacing (p-*, gap-*, m-*) */
+  --spacing-2xs: var(--space-2xs);
+  --spacing-xs: var(--space-xs);
+  --spacing-sm: var(--space-sm);
+  --spacing-md: var(--space-md);
+  --spacing-lg: var(--space-lg);
+  --spacing-xl: var(--space-xl);
+  --spacing-2xl: var(--space-2xl);
+  --spacing-3xl: var(--space-3xl);
+  --spacing-4xl: var(--space-4xl);
+  --spacing-5xl: var(--space-5xl);
+
+  /* Section rhythm (py-section-* utilities) */
+  --spacing-section-sm: var(--section-pad-sm);
+  --spacing-section: var(--section-pad);
+  --spacing-section-lg: var(--section-pad-lg);
+
+  /* ── max-w-* OVERRIDES ──────────────────────────────────────────────
+     Tailwind v4 uses --spacing-* for BOTH padding/margin AND max-w-*
+     utilities. The semantic --spacing-sm/md/lg/xl/2xl/3xl above collide
+     with the standard max-w-sm/md/lg/xl/2xl/3xl utilities, shrinking
+     them to absurdly small widths (e.g. max-w-2xl = 2.5rem = 40px).
+     These explicit --max-width-* tokens restore the correct values.     */
+  --max-width-xs: 20rem; /*  320px */
+  --max-width-sm: 24rem; /*  384px */
+  --max-width-md: 28rem; /*  448px */
+  --max-width-lg: 32rem; /*  512px */
+  --max-width-xl: 36rem; /*  576px */
+  --max-width-2xl: 42rem; /*  672px */
+  --max-width-3xl: 48rem; /*  768px */
+  --max-width-4xl: 56rem; /*  896px */
+  --max-width-5xl: 64rem; /* 1024px */
+  --max-width-6xl: 72rem; /* 1152px */
+  --max-width-7xl: 80rem; /* 1280px */
+  --max-width-screen-sm: 640px;
+  --max-width-screen-md: 768px;
+  --max-width-screen-lg: 1024px;
+  --max-width-screen-xl: 1280px;
+  --max-width-screen-2xl: 1536px;
 
   /* Gradients → bg-grad-* utilities */
   --background-image-grad-hero: var(--gradient-hero);
@@ -524,6 +739,8 @@
   --background-image-grad-gold: var(--gradient-gold);
   --background-image-grad-surface: var(--gradient-surface);
   --background-image-grad-ink: var(--gradient-ink);
+  --background-image-grad-dusk: var(--gradient-dusk);
+  --background-image-grad-lake: var(--gradient-lake);
   --background-image-grad-ink-soft: var(--overlay-ink);
   --background-image-grad-card: var(--overlay-card);
   --background-image-grad-hero-overlay: var(--overlay-hero);
@@ -697,7 +914,10 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    font-feature-settings:
+      "kern" 1,
+      "liga" 1,
+      "calt" 1;
   }
 
   /* Editorial display type — the serif voice of the brand. */
@@ -749,6 +969,21 @@
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
+}
+
+/* Numeric/statistical display — tabular figures for aligned statistics. */
+@utility numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Eyebrow-style label used across nav, buttons and property specs. */
+@utility label-caps {
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  font-weight: 500;
 }
 
 /* Glass surface — nav bars, sticky panels, floating cards. */

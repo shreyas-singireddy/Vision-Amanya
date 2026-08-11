@@ -6,6 +6,8 @@ import { useEffect, type PropsWithChildren } from "react";
 
 import { setSessionExpiredHandler } from "@api/refresh";
 
+import { SmoothScrollProvider } from "@components/providers/smooth-scroll-provider";
+
 import { useAuthStore, syncUserStore } from "@store/index";
 
 import { QueryProvider } from "./query-provider";
@@ -42,10 +44,12 @@ export function RootProvider({ children }: PropsWithChildren) {
   }, []);
 
   return (
-    <QueryProvider>
-      <ThemeProvider />
-      <ToastProvider />
-      {children}
-    </QueryProvider>
+    <SmoothScrollProvider>
+      <QueryProvider>
+        <ThemeProvider />
+        <ToastProvider />
+        {children}
+      </QueryProvider>
+    </SmoothScrollProvider>
   );
 }

@@ -34,7 +34,7 @@ export const DrawerOverlay = forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-overlay bg-overlay-solid backdrop-blur-[2px] data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out",
+      "fixed inset-0 z-[190] bg-overlay-solid backdrop-blur-[2px] data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out",
       className
     )}
     {...props}
@@ -57,7 +57,7 @@ export const DrawerContent = forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-modal flex flex-col gap-6 bg-card p-6 shadow-2xl outline-none sm:p-8",
+        "fixed z-[200] flex flex-col gap-6 bg-card p-6 shadow-2xl outline-none sm:p-8",
         sideClasses[side],
         className
       )}

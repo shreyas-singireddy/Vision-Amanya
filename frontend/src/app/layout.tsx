@@ -35,7 +35,7 @@ export const metadata: Metadata = buildMetadata({ canonicalPath: "/" });
  * Sets the `dark` class before paint to avoid a theme flash (FOUC).
  * Mirrors the logic in `@providers/theme-provider`.
  */
-const themeInitScript = `(function(){try{var t=localStorage.getItem('vision-amanya:theme');if(t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(!t&&matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})();`;
+const themeInitScript = `(function(){try{var t=localStorage.getItem('vision-amnaya:theme');if(t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches)||(!t&&matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})();`;
 
 export default function RootLayout({
   children,

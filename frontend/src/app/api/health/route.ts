@@ -5,6 +5,6 @@ export const runtime = "nodejs";
 export async function GET() {
   return Response.json({
     success: true,
-    data: { status: "ok", service: "vision-amanya-web", timestamp: new Date().toISOString() },
+    data: { status: "ok", service: "vision-amnaya-web", timestamp: new Date().toISOString() },
   });
 }

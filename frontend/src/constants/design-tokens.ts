@@ -60,6 +60,22 @@ export const sectionSpacing = {
 
 export type SectionSpacingToken = keyof typeof sectionSpacing;
 
+/** Semantic spacing scale (rem) — mirrors `--space-*` in globals.css. */
+export const space = {
+  "2xs": 0.25,
+  xs: 0.5,
+  sm: 0.75,
+  md: 1,
+  lg: 1.5,
+  xl: 2,
+  "2xl": 2.5,
+  "3xl": 3,
+  "4xl": 4,
+  "5xl": 5,
+} as const;
+
+export type SpaceToken = keyof typeof space;
+
 /** Layout container widths (rem). */
 export const containers = {
   page: 80, // 1280
@@ -67,6 +83,8 @@ export const containers = {
   narrow: 72, // 1152
   tight: 60, // 960
   prose: 42, // 672 — editorial measure
+  hero: 96, // 1536 — cinematic hero / full sections
+  gallery: 100, // 1600 — gallery & full-bleed moments
 } as const;
 
 export type ContainerToken = keyof typeof containers;
@@ -165,8 +183,11 @@ export const shadows = {
   soft: "0 2px 16px -2px rgb(25 25 23 / 0.08)",
   card: "0 1px 2px rgb(25 25 23 / 0.05), 0 12px 32px -16px rgb(13 33 26 / 0.18)",
   elevated: "0 24px 48px -16px rgb(13 33 26 / 0.3)",
+  subtle: "0 1px 2px 0 rgb(25 25 23 / 0.04), 0 2px 8px -1px rgb(25 25 23 / 0.05)",
+  modal: "0 8px 16px -4px rgb(25 25 23 / 0.12), 0 32px 64px -16px rgb(13 33 26 / 0.32)",
+  cinematic: "0 2px 12px rgb(7 29 43 / 0.18), 0 48px 96px -24px rgb(7 29 43 / 0.5)",
   glowPrimary: "0 0 0 4px rgb(61 139 102 / 0.16), 0 12px 32px -10px rgb(44 111 82 / 0.35)",
-  glowGold: "0 0 0 4px rgb(192 142 46 / 0.16), 0 12px 32px -10px rgb(165 115 38 / 0.3)",
+  glowGold: "0 0 0 4px rgb(163 116 74 / 0.16), 0 12px 32px -10px rgb(134 92 57 / 0.3)",
 } as const;
 
 /** Font-family stacks (shared with `@theme` in globals.css). */
@@ -195,7 +216,14 @@ export const fontSize = {
   display3: 40,
   display4: 32,
   lead: 18,
+  bodyLarge: 17,
+  body: 16,
+  bodySmall: 15,
   caption: 13,
+  label: 13,
+  nav: 14,
+  button: 14,
+  numeric: 40,
   eyebrow: 12,
   overline: 11,
   quote: 24,
@@ -207,4 +235,7 @@ export const letterSpacing = {
   eyebrow: "0.18em",
   overline: "0.22em",
   caps: "0.12em",
+  nav: "0.08em",
+  button: "0.04em",
+  label: "0.06em",
 } as const;

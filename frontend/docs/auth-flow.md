@@ -6,13 +6,13 @@ lives in memory on the client.
 
 ## Route map
 
-| Route handler | Purpose |
-| --- | --- |
-| `POST /api/auth/login` | Validate credentials → backend login → set cookie → return `{ access_token, expires_in, token_type, user }` |
-| `POST /api/auth/register` | Create account → set cookie → return token pair + user |
-| `POST /api/auth/refresh` | Read cookie → backend refresh → rotate cookie → return new access token |
-| `POST /api/auth/logout` | Read cookie → best-effort backend revoke → clear cookie |
-| `GET /api/auth/session` | Returns `{ authenticated }` based on cookie presence |
+| Route handler             | Purpose                                                                                                     |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `POST /api/auth/login`    | Validate credentials → backend login → set cookie → return `{ access_token, expires_in, token_type, user }` |
+| `POST /api/auth/register` | Create account → set cookie → return token pair + user                                                      |
+| `POST /api/auth/refresh`  | Read cookie → backend refresh → rotate cookie → return new access token                                     |
+| `POST /api/auth/logout`   | Read cookie → best-effort backend revoke → clear cookie                                                     |
+| `GET /api/auth/session`   | Returns `{ authenticated }` based on cookie presence                                                        |
 
 All handlers are `nodejs` runtime with `dynamic = "force-dynamic"` and use the
 helpers in `src/lib/server/cookies.ts` plus `bff*` functions in

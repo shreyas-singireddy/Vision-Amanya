@@ -12,6 +12,8 @@ import { cn } from "@utils/cn";
 export interface NavLinkProps extends Omit<ComponentProps<typeof Link>, "className"> {
   /** Highlight when the current path equals the href, or starts with it. */
   active?: boolean | ((pathname: string) => boolean);
+  /** Invert for dark surfaces (transparent header over a hero). */
+  inverted?: boolean;
   className?: string;
   /** Emit the underline — set to false for tight glyph clusters (e.g. CTAs). */
   underline?: boolean;
@@ -20,6 +22,7 @@ export interface NavLinkProps extends Omit<ComponentProps<typeof Link>, "classNa
 export function NavLink({
   href,
   active,
+  inverted = false,
   className,
   underline = true,
   children,
@@ -33,8 +36,11 @@ export function NavLink({
     <Link
       href={href}
       className={cn(
-        "group relative inline-flex items-center text-sm font-medium text-muted-foreground transition-colors duration-fast ease-standard hover:text-foreground focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/15 rounded-sm",
-        isActive && "text-foreground",
+        "group relative inline-flex items-center text-sm font-medium transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/15 rounded-sm",
+        inverted
+          ? "text-neutral-50/70 hover:text-neutral-50"
+          : "text-muted-foreground hover:text-foreground",
+        isActive && (inverted ? "text-neutral-50" : "text-foreground"),
         className
       )}
       aria-current={isActive ? "page" : undefined}

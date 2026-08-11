@@ -1,6 +1,6 @@
-# Vision Amanya — Frontend
+# Vision Amnaya — Frontend
 
-Next.js 16 frontend for the Vision Amanya real estate website, backed by the
+Next.js 16 frontend for the Vision Amnaya real estate website, backed by the
 FastAPI API in [`../backend`](../backend).
 
 > **Phase 6.2 — design system built.** Phase 6.1 delivered the production-grade
@@ -32,25 +32,25 @@ npm run dev                  # http://localhost:3000
 
 Scripts:
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Development server (Turbopack) |
-| `npm run build` | Production build |
-| `npm run start` | Serve the production build |
-| `npm run lint` | ESLint (includes prettier as an ESLint rule) |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run format` / `format:check` | Prettier |
+| Command                           | Purpose                                      |
+| --------------------------------- | -------------------------------------------- |
+| `npm run dev`                     | Development server (Turbopack)               |
+| `npm run build`                   | Production build                             |
+| `npm run start`                   | Serve the production build                   |
+| `npm run lint`                    | ESLint (includes prettier as an ESLint rule) |
+| `npm run typecheck`               | `tsc --noEmit`                               |
+| `npm run format` / `format:check` | Prettier                                     |
 
 ## Environment
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | yes | Public backend base (`http://localhost:8000/api/v1` in dev) |
-| `API_URL` | yes | Server-only backend base for BFF route handlers |
-| `SESSION_COOKIE_NAME` | no | httpOnly session cookie name (default `va_session`) |
-| `SESSION_MAX_AGE_SECONDS` | no | Refresh-token TTL (default 30 days) |
-| `SESSION_COOKIE_SECURE` | no | Set cookie `Secure` flag (default `true`) |
-| `SESSION_COOKIE_DOMAIN` | no | Optional cookie domain |
+| Variable                  | Required | Purpose                                                     |
+| ------------------------- | -------- | ----------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`     | yes      | Public backend base (`http://localhost:8000/api/v1` in dev) |
+| `API_URL`                 | yes      | Server-only backend base for BFF route handlers             |
+| `SESSION_COOKIE_NAME`     | no       | httpOnly session cookie name (default `va_session`)         |
+| `SESSION_MAX_AGE_SECONDS` | no       | Refresh-token TTL (default 30 days)                         |
+| `SESSION_COOKIE_SECURE`   | no       | Set cookie `Secure` flag (default `true`)                   |
+| `SESSION_COOKIE_DOMAIN`   | no       | Optional cookie domain                                      |
 
 `NEXT_PUBLIC_*` values are validated at build time by `src/lib/env.ts`; server
 values by `src/lib/server/env.ts`.

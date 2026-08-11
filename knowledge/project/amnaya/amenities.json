@@ -1,0 +1,133 @@
+{
+  "amenities": [
+    {
+      "name": "Clubhouse",
+      "size": "25,000 sq.ft.",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Roof Top Swimming Pool",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Badminton Courts",
+      "count": 2,
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Squash Court",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Half Basketball Court",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Cricket Practice Net",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Multipurpose Hall",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Creche",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Billiards Lounge",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Indoor Games",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Table Tennis",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Chess & Carroms",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "GYM",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Hobby Room",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Aerobics",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Meditation/Yoga Room",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "SPA & Salon",
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    },
+    {
+      "name": "Guest Rooms",
+      "count": 4,
+      "source": {
+        "document": "Amnaya-Proposed-Project-At-Khajaguda.pdf",
+        "page": 20
+      }
+    }
+  ]
+}

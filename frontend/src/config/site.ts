@@ -41,7 +41,7 @@ export const siteConfig: SiteConfig = {
   url: env.NEXT_PUBLIC_APP_URL,
   name: env.NEXT_PUBLIC_APP_NAME,
   description: env.NEXT_PUBLIC_APP_DESCRIPTION,
-  titleTemplate: "%s | Vision Amanya",
+  titleTemplate: "%s | Vision Amnaya",
   locale: firstSupportedLocale(env.NEXT_PUBLIC_SUPPORTED_LOCALES),
   supportedLocales: env.NEXT_PUBLIC_SUPPORTED_LOCALES,
   defaultLocale: env.NEXT_PUBLIC_DEFAULT_LOCALE,
@@ -52,7 +52,7 @@ export const siteConfig: SiteConfig = {
     country: "India",
   },
   contact: {
-    email: "sales@visionamanya.in",
+    email: "sales@visionamnaya.in",
     phone: null, // Fill once confirmed.
     address: null, // Fill once confirmed.
   },
@@ -61,11 +61,11 @@ export const siteConfig: SiteConfig = {
     twitter: "https://x.com/visioninfra",
   },
   keywords: [
-    "Vision Amanya",
+    "Vision Amnaya",
+    "Amnaya",
     "Vision Infra",
     "luxury apartments Hyderabad",
     "Khajaguda residences",
-    "2BHK Hyderabad",
     "3BHK Hyderabad",
     "premium real estate Hyderabad",
   ],

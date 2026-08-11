@@ -27,19 +27,19 @@ never import higher ones.
 
 ## Path aliases
 
-| Alias | Target |
-| --- | --- |
-| `@domain/*` | `src/types/*` |
-| `@config/*` | `src/config/*` |
-| `@constants/*` | `src/constants/*` |
-| `@lib/*` | `src/lib/*` |
-| `@services/*` | `src/services/*` |
-| `@store/*` | `src/store/*` |
-| `@hooks/*` | `src/hooks/*` |
-| `@providers/*` | `src/providers/*` |
+| Alias           | Target             |
+| --------------- | ------------------ |
+| `@domain/*`     | `src/types/*`      |
+| `@config/*`     | `src/config/*`     |
+| `@constants/*`  | `src/constants/*`  |
+| `@lib/*`        | `src/lib/*`        |
+| `@services/*`   | `src/services/*`   |
+| `@store/*`      | `src/store/*`      |
+| `@hooks/*`      | `src/hooks/*`      |
+| `@providers/*`  | `src/providers/*`  |
 | `@components/*` | `src/components/*` |
-| `@features/*` | `src/features/*` |
-| `@utils/*` | `src/utils/*` |
+| `@features/*`   | `src/features/*`   |
+| `@utils/*`      | `src/utils/*`      |
 
 > The alias was renamed from `@types/*` because it collided with TypeScript's
 > global `@types` scope (TS6137).

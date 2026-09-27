@@ -6,7 +6,6 @@ import { projectAssets } from "@config/project";
 import { routes } from "@constants/routes";
 
 import { Button } from "@components/ui/button";
-import { Container } from "@components/ui/container";
 import { Eyebrow, DisplayHeading } from "@components/ui/heading";
 
 import { Section, SectionHeader } from "@components/layout/section";
@@ -18,11 +17,10 @@ import {
   ImageReveal,
   WordReveal,
   Reveal,
-  Stagger,
   HoverReveal,
 } from "@components/motion";
 
-import { FloorPlanCard } from "@components/property/floor-plan-card";
+import { FloorPlanExplorer, type FloorPlan } from "@components/property/floor-plan-explorer";
 
 export const metadata: Metadata = {
   title: "Residences — Amnaya by Vision Infra",
@@ -31,35 +29,56 @@ export const metadata: Metadata = {
 };
 
 /** All residence configurations at Amnaya — sourced from project documentation. */
-const residenceTypes = [
+const residencePlans: FloorPlan[] = [
   {
-    type: "3 BHK — Type A",
+    id: "type-a",
+    tabLabel: "Type A",
+    title: "3 BHK — Type A",
     area: "1,715 sq.ft.",
     note: "Garden-facing",
-    src: projectAssets.floorplans,
+    src: projectAssets.floorplanA,
     alt: "Amnaya 3 BHK Type A floor plan",
     description:
       "A compact, efficient 3 BHK configuration with generous living-dining space and garden-facing orientation.",
+    tag: "Residence",
   },
   {
-    type: "3 BHK — Type B",
+    id: "type-b",
+    tabLabel: "Type B",
+    title: "3 BHK — Type B",
     area: "2,100 sq.ft.",
     note: "Lake-facing",
-    src: projectAssets.floorplans,
+    src: projectAssets.floorplanB,
     alt: "Amnaya 3 BHK Type B floor plan",
     description:
       "The lake-facing configuration — positioned to capture the full 25-acre view from the main living area.",
+    tag: "Residence",
   },
   {
-    type: "3 BHK — Type C",
+    id: "type-c",
+    tabLabel: "Type C",
+    title: "3 BHK — Type C",
     area: "2,590 sq.ft.",
     note: "Corner — Dual aspect",
-    src: projectAssets.floorplans,
+    src: projectAssets.floorplanC,
     alt: "Amnaya 3 BHK Type C floor plan",
     description:
       "The largest configuration — a dual-aspect corner residence with extended balcony and panoramic views.",
+    tag: "Residence",
   },
-] as const;
+  {
+    id: "block",
+    tabLabel: "Block Plan",
+    title: "Typical block layout",
+    note: "10 floors per block",
+    src: projectAssets.blockPlan,
+    alt: "Amnaya typical block plan",
+    description:
+      "The typical block arrangement across each tower floor. Exact unit placement and availability are available on request.",
+    tag: "Typical floor",
+    ctaLabel: "Enquire about availability",
+  },
+];
 
 /** Interior feature cards */
 const features = [
@@ -136,31 +155,18 @@ export default function PropertiesPage() {
         </div>
       </Section>
 
-      {/* Floor plan cards */}
+      {/* Interactive floor plan explorer */}
       <Section id="floor-plans" spacing="default" tone="subtle">
         <SectionHeader
           eyebrow="Configurations"
           title="Choose your residence"
-          description="Three 3 BHK configurations — each with distinct orientation, size, and character."
+          description="Three 3 BHK configurations — each with distinct orientation, size, and character. Compare layouts, then view any plan in full."
           align="center"
         />
 
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {residenceTypes.map((res, i) => (
-            <Reveal key={res.type} delay={i * 0.1}>
-              <div className="flex flex-col gap-4">
-                <FloorPlanCard
-                  src={res.src}
-                  alt={res.alt}
-                  type={res.type}
-                  area={res.area}
-                  note={res.note}
-                />
-                <p className="text-sm text-muted-foreground">{res.description}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+        <Reveal className="mt-16">
+          <FloorPlanExplorer plans={residencePlans} />
+        </Reveal>
 
         <Reveal className="mt-8">
           <p className="text-center text-xs text-muted-foreground">

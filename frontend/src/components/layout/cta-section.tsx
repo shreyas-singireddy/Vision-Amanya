@@ -42,9 +42,9 @@ export function CtaSection({
               {title}
             </DisplayHeading>
             {lead ? <p className="max-w-xl text-lead text-neutral-50/70">{lead}</p> : null}
-            <div className="flex flex-wrap items-center justify-center gap-4">
+            <div className="flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4">
               {primaryCta ? (
-                <Button asChild variant="accent" size="lg">
+                <Button asChild variant="accent" size="lg" className="w-full sm:w-auto">
                   <a href={primaryCta.href}>{primaryCta.label}</a>
                 </Button>
               ) : null}
@@ -53,7 +53,7 @@ export function CtaSection({
                   asChild
                   variant="outline"
                   size="lg"
-                  className="border-neutral-50/30 text-neutral-50 hover:bg-neutral-50/10"
+                  className="w-full sm:w-auto border-neutral-50/30 text-neutral-50 hover:bg-neutral-50/10"
                 >
                   <a href={secondaryCta.href}>{secondaryCta.label}</a>
                 </Button>

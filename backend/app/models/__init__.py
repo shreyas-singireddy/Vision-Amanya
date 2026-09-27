@@ -12,7 +12,7 @@ from app.models.chat import (
     KnowledgeChunk,
     KnowledgeDocument,
 )
-from app.models.crm import Booking, Enquiry, Lead, Review
+from app.models.crm import Booking, Enquiry, Lead, Review, SalesHandoff, WhatsAppMessage, SalesNotification
 from app.models.property import (
     Amenity,
     Favorite,
@@ -38,6 +38,8 @@ from app.models.system import (
 )
 from app.models.user import Agent, User
 
+from app.models.knowledge import KnowledgeConflict, KnowledgeItem, RAGChunk
+
 __all__ = [
     "Agent",
     "Amenity",
@@ -53,7 +55,9 @@ __all__ = [
     "Favorite",
     "FileUpload",
     "KnowledgeChunk",
+    "KnowledgeConflict",
     "KnowledgeDocument",
+    "KnowledgeItem",
     "Lead",
     "Notification",
     "Permission",
@@ -63,9 +67,13 @@ __all__ = [
     "PropertyCategory",
     "PropertyImage",
     "PropertyPriceHistory",
+    "RAGChunk",
     "Review",
     "Role",
     "RolePermission",
+    "SalesHandoff",
+    "SalesNotification",
     "User",
     "UserRole",
+    "WhatsAppMessage",
 ]

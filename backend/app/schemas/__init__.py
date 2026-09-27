@@ -59,6 +59,16 @@ from app.schemas.user import (
     UserRoleAssignment,
     UserUpdate,
 )
+from app.schemas.handoff import (
+    HandoffAnalytics,
+    HandoffContext,
+    HandoffRequest,
+    HandoffResponse,
+    HandoffStatusUpdate,
+    KnowledgeGapEvent,
+    SalesAssignment,
+    SalesConversationSummary,
+)
 
 __all__ = [
     "AdminUserUpdate",

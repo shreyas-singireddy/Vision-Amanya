@@ -1,0 +1,134 @@
+"use client";
+
+/**
+ * FloorSelector — intuitive floor navigation.
+ *
+ * Desktop: vertical floor rail (top floor at top, ground at bottom).
+ * Mobile/tablet: horizontal scrollable chip rail.
+ * Keyboard: arrow-key navigation via `useKeyboardNav`.
+ */
+
+import { useRef } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
+import type { FloorPlanFloor } from "@domain/floor-plan";
+import { useFloorPlanStore } from "@store/floor-plan.store";
+import { useFloorPlanTracking } from "@features/floor-plans";
+import { useKeyboardNav } from "@hooks/use-keyboard-nav";
+
+import { cn } from "@utils/cn";
+
+export interface FloorSelectorProps {
+  floors: FloorPlanFloor[];
+  className?: string;
+}
+
+export function FloorSelector({ floors, className }: FloorSelectorProps) {
+  const floorId = useFloorPlanStore((s) => s.floorId);
+  const setFloorId = useFloorPlanStore((s) => s.setFloorId);
+  const track = useFloorPlanTracking();
+
+  const desktopRailRef = useRef<HTMLDivElement | null>(null);
+  const mobileRailRef = useRef<HTMLDivElement | null>(null);
+  useKeyboardNav(desktopRailRef, { selector: "[data-floor-id]", loop: true });
+  useKeyboardNav(mobileRailRef, { selector: "[data-floor-id]", loop: true });
+
+  // Floors are already ordered top (10) → ground (1).
+  const sorted = [...floors].sort((a, b) => b.floorNumber - a.floorNumber);
+
+  return (
+    <div className={cn("flex flex-col gap-2", className)}>
+      <span className="label-caps text-muted-foreground">Floor</span>
+
+      {/* Desktop vertical rail */}
+      <div
+        ref={desktopRailRef}
+        role="listbox"
+        aria-label="Select a floor"
+        className="hidden max-h-[420px] flex-col gap-1 overflow-y-auto pr-1 lg:flex"
+      >
+        {sorted.map((floor) => {
+          const isActive = floorId === floor.id;
+          const hasUnits = floor.units.length > 0;
+          return (
+            <button
+              key={floor.id}
+              data-floor-id={floor.id}
+              role="option"
+              aria-selected={isActive}
+              aria-label={`${floor.label}${hasUnits ? ` — ${floor.units.length} residences` : " — no residences listed"}`}
+              onClick={() => {
+                setFloorId(floor.id);
+                track("floor_selected", { floorId: floor.id });
+              }}
+              className={cn(
+                "flex min-h-10 items-center justify-between gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-[background-color,border-color,color] duration-base ease-standard",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+                isActive
+                  ? "border-primary-600 bg-primary-600 text-white"
+                  : "border-border bg-card text-muted-foreground hover:border-primary-300 hover:text-foreground",
+                !hasUnits && "opacity-50"
+              )}
+            >
+              <span>{floor.label}</span>
+              {hasUnits ? (
+                <span
+                  aria-hidden
+                  className={cn(
+                    "rounded-full px-1.5 py-0.5 text-[0.625rem] font-semibold",
+                    isActive ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {floor.units.length}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Mobile / tablet horizontal rail */}
+      <div
+        ref={mobileRailRef}
+        role="listbox"
+        aria-label="Select a floor"
+        className="flex gap-2 overflow-x-auto pb-1 lg:hidden"
+      >
+        {sorted.map((floor) => {
+          const isActive = floorId === floor.id;
+          const hasUnits = floor.units.length > 0;
+          return (
+            <button
+              key={floor.id}
+              data-floor-id={floor.id}
+              role="option"
+              aria-selected={isActive}
+              aria-label={`${floor.label}${hasUnits ? ` — ${floor.units.length} residences` : " — no residences listed"}`}
+              onClick={() => {
+                setFloorId(floor.id);
+                track("floor_selected", { floorId: floor.id });
+              }}
+              className={cn(
+                "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-[background-color,border-color,color] duration-base ease-standard",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+                isActive
+                  ? "border-primary-600 bg-primary-600 text-white"
+                  : "border-border bg-card text-muted-foreground hover:border-primary-300 hover:text-foreground",
+                !hasUnits && "opacity-50"
+              )}
+            >
+              {floor.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Scroll hint (desktop) */}
+      <div className="hidden items-center gap-1 text-[0.625rem] uppercase tracking-label text-muted-foreground lg:flex">
+        <ChevronUp aria-hidden className="h-3 w-3" />
+        <span>Scroll</span>
+        <ChevronDown aria-hidden className="h-3 w-3" />
+      </div>
+    </div>
+  );
+}

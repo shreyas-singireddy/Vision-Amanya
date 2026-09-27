@@ -36,7 +36,7 @@ export function NavLink({
     <Link
       href={href}
       className={cn(
-        "group relative inline-flex items-center text-sm font-medium transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/15 rounded-sm",
+        "group relative inline-flex items-center whitespace-nowrap text-sm font-medium transition-colors duration-fast ease-standard focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/15 rounded-sm",
         inverted
           ? "text-neutral-50/70 hover:text-neutral-50"
           : "text-muted-foreground hover:text-foreground",

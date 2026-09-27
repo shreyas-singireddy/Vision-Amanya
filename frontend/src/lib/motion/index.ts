@@ -10,3 +10,4 @@ export * from "./scroll";
 export * from "./hover";
 export * from "./hero";
 export * from "./gsap";
+export * from "./get-motion-tag";

@@ -16,6 +16,7 @@ from app.services.project_service import ProjectService
 from app.services.property_service import PropertyService
 from app.services.review_service import ReviewService
 from app.services.user_service import UserService
+from app.services.handoff_service import HandoffService
 
 __all__ = [
     "AdminService",
@@ -24,6 +25,7 @@ __all__ = [
     "BookingService",
     "EnquiryService",
     "FavoriteService",
+    "HandoffService",
     "LeadService",
     "NotificationService",
     "ProjectService",

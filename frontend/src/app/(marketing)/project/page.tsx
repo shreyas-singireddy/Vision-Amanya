@@ -1,21 +1,17 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { ctaConfig } from "@config/cta";
 import { projectAssets, projectConfig, projectFacts } from "@config/project";
-import { routes } from "@constants/routes";
 
-import { Button } from "@components/ui/button";
-import { Container } from "@components/ui/container";
 import { Eyebrow, DisplayHeading } from "@components/ui/heading";
 
-import { Section, SectionHeader } from "@components/layout/section";
+import { Section } from "@components/layout/section";
 import { SplitSection } from "@components/layout/split-section";
 import { MediaBand } from "@components/layout/media-band";
 import { StatStrip } from "@components/layout/stat-strip";
 import { CtaSection } from "@components/layout/cta-section";
 
-import { HeroReveal, HeroRule, ImageReveal, WordReveal, Reveal, Stagger } from "@components/motion";
+import { HeroReveal, HeroRule, ImageReveal, WordReveal, Reveal } from "@components/motion";
 
 export const metadata: Metadata = {
   title: "The Project — Amnaya by Vision Infra",

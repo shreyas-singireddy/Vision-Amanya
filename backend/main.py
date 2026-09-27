@@ -20,11 +20,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1 import (
     admin_router,
+    ai_router,
     analytics_router,
     auth_router,
     bookings_router,
     enquiries_router,
     favorites_router,
+    handoff_router,
     leads_router,
     notifications_router,
     projects_router,
@@ -194,6 +196,8 @@ for router in (
     notifications_router,
     analytics_router,
     admin_router,
+    ai_router,
+    handoff_router,
 ):
     app.include_router(router, prefix=settings.API_V1_STR)
 

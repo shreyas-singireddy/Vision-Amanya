@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
+from typing import Any, Optional
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BusinessException, NotFoundException
@@ -167,3 +170,263 @@ class LeadService(BaseService):
                 lead.lost_at = utcnow()
             if reason:
                 lead.lost_reason = reason
+
+    # ── Phase 7.5: AI Consultant lead methods ─────────────────────────────────
+
+    async def upsert_by_whatsapp(
+        self,
+        whatsapp_number: str,
+        profile: Any,
+        *,
+        conversation_id: uuid.UUID | None = None,
+    ) -> Lead:
+        """Deduplicate by WhatsApp number. Creates or updates the lead.
+
+        PostgreSQL is the source of truth. Call this BEFORE sending WhatsApp messages.
+        """
+        # 1. Look for existing lead with same WhatsApp number
+        existing: Lead | None = None
+        stmt = select(Lead).where(
+            Lead.whatsapp_number == whatsapp_number, Lead.deleted_at.is_(None)
+        )
+        existing = await self.db.scalar(stmt)
+
+        # 2. Also check phone column
+        if not existing:
+            stmt2 = select(Lead).where(
+                Lead.phone == whatsapp_number, Lead.deleted_at.is_(None)
+            )
+            existing = await self.db.scalar(stmt2)
+
+        name = getattr(profile, "name", None) or "Amnaya Visitor"
+        email = getattr(profile, "email", None)
+
+        if existing:
+            # Update in place — never create duplicates
+            if name and name != "Amnaya Visitor":
+                existing.name = name
+            if email:
+                existing.email = email
+            existing.whatsapp_number = whatsapp_number
+            existing.phone = existing.phone or whatsapp_number
+            self._apply_profile(existing, profile, conversation_id)
+            existing.lead_score = self._compute_score(existing)
+            existing.priority = self._priority_from_score(existing.lead_score)
+            await write_audit_log(
+                self.db, action="lead.updated_from_conversation",
+                resource_type="lead", resource_id=existing.id,
+                new_value={"whatsapp_number": whatsapp_number, "lead_score": existing.lead_score},
+            )
+            await self.commit()
+            return existing
+
+        # 3. Create new lead
+        lead = Lead(
+            name=name,
+            email=email,
+            phone=whatsapp_number,
+            whatsapp_number=whatsapp_number,
+            source="ai_consultant",
+            status=LeadStatus.NEW,
+        )
+        self._apply_profile(lead, profile, conversation_id)
+        lead.lead_score = self._compute_score(lead)
+        lead.priority = self._priority_from_score(lead.lead_score)
+        self.db.add(lead)
+        await write_audit_log(
+            self.db, action="lead.created_from_conversation",
+            resource_type="lead", resource_id=lead.id,
+            new_value={"whatsapp_number": whatsapp_number, "name": name},
+        )
+        await self.commit()
+        return lead
+
+    async def create_from_conversation(
+        self,
+        profile: Any,
+        *,
+        conversation_id: uuid.UUID | None = None,
+        source: str = "ai_consultant",
+    ) -> Lead:
+        """Create or update a lead from a ConversationLeadProfile.
+
+        Deduplicates first by WhatsApp, then by email, then creates new.
+        """
+        whatsapp = getattr(profile, "whatsapp_number", None)
+        email = getattr(profile, "email", None)
+
+        if whatsapp:
+            return await self.upsert_by_whatsapp(
+                whatsapp, profile, conversation_id=conversation_id
+            )
+
+        # Deduplicate by email if provided
+        existing: Lead | None = None
+        if email:
+            stmt = select(Lead).where(Lead.email == email, Lead.deleted_at.is_(None))
+            existing = await self.db.scalar(stmt)
+
+        name = getattr(profile, "name", None) or "Amnaya Visitor"
+        if existing:
+            self._apply_profile(existing, profile, conversation_id)
+            existing.lead_score = self._compute_score(existing)
+            existing.priority = self._priority_from_score(existing.lead_score)
+            await self.commit()
+            return existing
+
+        lead = Lead(
+            name=name,
+            email=email,
+            phone=getattr(profile, "phone", None),
+            source=source,
+            status=LeadStatus.NEW,
+        )
+        self._apply_profile(lead, profile, conversation_id)
+        lead.lead_score = self._compute_score(lead)
+        lead.priority = self._priority_from_score(lead.lead_score)
+        self.db.add(lead)
+        await write_audit_log(
+            self.db, action="lead.created_from_conversation",
+            resource_type="lead", resource_id=lead.id,
+            new_value={"name": name, "source": source},
+        )
+        await self.commit()
+        return lead
+
+    async def record_whatsapp_consent(
+        self,
+        lead_id: uuid.UUID,
+        consent: bool,
+        *,
+        source: str = "ai_consultant",
+    ) -> Lead:
+        """Record WhatsApp consent (or declination). Writes audit log."""
+        lead = await self.leads.get_or_404(lead_id)
+        lead.whatsapp_consent = consent
+        lead.consent_timestamp = utcnow()
+        lead.consent_source = source
+        await write_audit_log(
+            self.db,
+            action="lead.whatsapp_consent_given" if consent else "lead.whatsapp_consent_declined",
+            resource_type="lead",
+            resource_id=lead.id,
+            new_value={"whatsapp_consent": consent, "consent_source": source},
+        )
+        await self.commit()
+        return lead
+
+    async def update_unit_interest(
+        self,
+        lead_id: uuid.UUID,
+        unit_id: str,
+        interaction_type: str = "viewed",
+    ) -> Lead:
+        """Append a unit to the appropriate interaction list on the lead."""
+        lead = await self.leads.get_or_404(lead_id)
+        field_map = {
+            "viewed": "viewed_unit_ids",
+            "interested": "interested_unit_ids",
+            "compared": "compared_unit_ids",
+            "recommended": "recommended_unit_ids",
+        }
+        field = field_map.get(interaction_type, "viewed_unit_ids")
+        current = list(getattr(lead, field) or [])
+        if unit_id not in current:
+            current.append(unit_id)
+            setattr(lead, field, current)
+            lead.lead_score = self._compute_score(lead)
+        await self.commit()
+        return lead
+
+    @staticmethod
+    def generate_sales_summary(lead: Lead) -> str:
+        """Produce a concise sales-team text card from a Lead record."""
+        from datetime import datetime
+        lines = [
+            "── AMNAYA AI LEAD CARD ──────────────────────────────",
+            f"Name        : {lead.name}",
+            f"WhatsApp    : {lead.whatsapp_number or lead.phone or 'N/A'}",
+            f"City        : {lead.location or '—'}",
+            f"Purpose     : {(lead.buying_purpose or '—').replace('_', ' ').title()}",
+            f"Config      : {lead.configuration or '3BHK'}",
+        ]
+        if lead.budget_max:
+            lines.append(f"Budget      : ₹{lead.budget_max / 10_000_000:.1f} Cr")
+        if lead.preferred_view:
+            lines.append(f"View        : {lead.preferred_view.replace('_', ' ').title()}")
+        if lead.preferred_floor:
+            lines.append(f"Floor       : {lead.preferred_floor.replace('_', ' ').title()}")
+        if lead.buying_timeline:
+            lines.append(f"Timeline    : {lead.buying_timeline}")
+        units = lead.interested_unit_ids or []
+        if units:
+            lines.append(f"Interested  : {', '.join(units)}")
+        lines.append(f"Lead Score  : {lead.lead_score}/100")
+        lines.append(f"Site Visit  : {'Yes' if lead.site_visit_interest else 'No'}")
+        lines.append(f"Consent     : {'Yes' if lead.whatsapp_consent else 'No'}")
+        lines.append("─────────────────────────────────────────────────────")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _apply_profile(lead: Lead, profile: Any, conversation_id: uuid.UUID | None = None) -> None:
+        """Copy profile fields onto a Lead model object."""
+        field_map = [
+            ("location", "location"),
+            ("buying_purpose", "buying_purpose"),
+            ("buying_timeline", "buying_timeline"),
+            ("configuration", "configuration"),
+            ("budget_min", "budget_min"),
+            ("budget_max", "budget_max"),
+            ("preferred_floor", "preferred_floor"),
+            ("preferred_view", "preferred_view"),
+            ("preferred_orientation", "preferred_orientation"),
+            ("family_size", "family_size"),
+            ("site_visit_interest", "site_visit_interest"),
+            ("whatsapp_consent", "whatsapp_consent"),
+            ("consent_source", "consent_source"),
+            ("interested_unit_ids", "interested_unit_ids"),
+            ("viewed_unit_ids", "viewed_unit_ids"),
+            ("compared_unit_ids", "compared_unit_ids"),
+            ("recommended_unit_ids", "recommended_unit_ids"),
+        ]
+        for src, dst in field_map:
+            val = getattr(profile, src, None)
+            if val is not None:
+                setattr(lead, dst, val)
+        if conversation_id:
+            lead.conversation_id = conversation_id
+        if getattr(profile, "whatsapp_consent", None) and getattr(profile, "consent_timestamp", None) is None:
+            lead.consent_timestamp = utcnow()
+
+    @staticmethod
+    def _compute_score(lead: Lead) -> int:
+        """Compute lead score using the Phase 7.5 engine."""
+        from app.ai.lead_scoring import lead_scoring_engine
+        profile_dict = {
+            "name": lead.name,
+            "phone": lead.phone,
+            "whatsapp_number": lead.whatsapp_number,
+            "whatsapp_consent": lead.whatsapp_consent,
+            "buying_purpose": lead.buying_purpose,
+            "buying_timeline": lead.buying_timeline,
+            "budget_min": lead.budget_min,
+            "budget_max": lead.budget_max,
+            "configuration": lead.configuration,
+            "preferred_view": lead.preferred_view,
+            "preferred_floor": lead.preferred_floor,
+            "preferred_orientation": lead.preferred_orientation,
+            "interested_unit_ids": lead.interested_unit_ids,
+            "viewed_unit_ids": lead.viewed_unit_ids,
+            "compared_unit_ids": lead.compared_unit_ids,
+            "site_visit_interest": lead.site_visit_interest,
+        }
+        return lead_scoring_engine.score(profile_dict).total
+
+    @staticmethod
+    def _priority_from_score(score: int) -> LeadPriority:
+        """Map lead score to priority."""
+        if score >= 75:
+            return LeadPriority.HIGH
+        if score >= 45:
+            return LeadPriority.MEDIUM
+        return LeadPriority.LOW

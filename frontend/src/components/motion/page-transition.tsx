@@ -14,7 +14,7 @@
  *   </main>
  */
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
 
@@ -34,16 +34,13 @@ export function PageTransition({ children, duration }: PageTransitionProps) {
   const transition = duration !== undefined ? { ...transitionPage, duration } : transitionPage;
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={pathname}
-        initial={reduced ? false : { opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={reduced ? undefined : { opacity: 0, y: -6 }}
-        transition={reduced ? { duration: 0 } : transition}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      key={pathname}
+      initial={reduced ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={reduced ? { duration: 0 } : transition}
+    >
+      {children}
+    </motion.div>
   );
 }

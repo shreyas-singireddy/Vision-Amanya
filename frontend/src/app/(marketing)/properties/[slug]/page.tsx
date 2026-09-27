@@ -1,25 +1,37 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PagePlaceholder } from "@components/composite/page-placeholder";
+import { residenceService } from "@services/residence.service";
+import { ResidenceExplorer } from "@components/amnaya/residences";
 
 type PropertyDetailPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-/**
- * Dynamic-route foundation. The slug will be resolved against the property
- * API in a later phase; for now any non-empty slug renders the stub.
- */
+/** Dynamic SEO Metadata Generator for Property Slugs */
+export async function generateMetadata({ params }: PropertyDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const residence = await residenceService.get(slug);
+
+  if (!residence) {
+    return {
+      title: "Property Not Found — Vision Amnaya",
+    };
+  }
+
+  return {
+    title: `${residence.title} | ${residence.typology} | Vision Amnaya`,
+    description: residence.summary,
+  };
+}
+
 export default async function PropertyDetailPage({ params }: PropertyDetailPageProps) {
   const { slug } = await params;
+  const residence = await residenceService.get(slug);
 
-  if (!slug) notFound();
+  if (!residence) {
+    notFound();
+  }
 
-  return (
-    <PagePlaceholder
-      eyebrow="Residences"
-      title={slug.split("-").join(" ")}
-      description="The property detail experience will be built here in a later phase."
-    />
-  );
+  return <ResidenceExplorer residence={residence} />;
 }

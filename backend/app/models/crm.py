@@ -22,24 +22,31 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.dialects.postgresql import INET
+from sqlalchemy.dialects.postgresql import INET, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
 from app.models.enums import (
     BookingStatus,
     EnquiryStatus,
+    HandoffReason,
+    HandoffStatus,
     InterestType,
     LeadPriority,
     LeadStatus,
     ReviewStatus,
+    SalesNotificationStatus,
     VisitType,
+    WhatsAppMessageStatus,
     enum_column,
 )
 
 if TYPE_CHECKING:
+    from app.models.chat import ChatSession
     from app.models.property import Project, Property
     from app.models.user import Agent, User
+
+from sqlalchemy.dialects.postgresql import ARRAY
 
 
 class Enquiry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -108,8 +115,35 @@ class Lead(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
         ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True
     )
     name: Mapped[str] = mapped_column(String(150), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    # Phase 7.5: email is nullable — AI consultant flow is WhatsApp-first
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # Phase 7.5: WhatsApp contact + consent
+    whatsapp_number: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
+    whatsapp_consent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    consent_timestamp: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    consent_source: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # Phase 7.5: buyer profile
+    location: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    buying_purpose: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    configuration: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    preferred_floor: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    preferred_view: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    preferred_orientation: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    family_size: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    buying_timeline: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    site_visit_interest: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    # Phase 7.5: unit tracking (JSONB lists)
+    interested_unit_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    recommended_unit_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    viewed_unit_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    compared_unit_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    # Phase 7.5: conversation linkage
+    conversation_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("chat_sessions.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    landing_page: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    last_contacted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[LeadStatus] = mapped_column(enum_column(LeadStatus, 30), nullable=False, default=LeadStatus.NEW, index=True
     )
     priority: Mapped[LeadPriority] = mapped_column(enum_column(LeadPriority, 20), nullable=False, default=LeadPriority.MEDIUM
@@ -144,6 +178,14 @@ class Lead(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     )
     project: Mapped[Project | None] = relationship(
         back_populates="leads", foreign_keys=[project_id]
+    )
+    whatsapp_messages: Mapped[list[WhatsAppMessage]] = relationship(
+        back_populates="lead", foreign_keys="WhatsAppMessage.lead_id",
+        cascade="all, delete-orphan",
+    )
+    sales_notifications: Mapped[list[SalesNotification]] = relationship(
+        back_populates="lead", foreign_keys="SalesNotification.lead_id",
+        cascade="all, delete-orphan",
     )
 
 
@@ -247,3 +289,110 @@ class Review(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
         back_populates="reviews", foreign_keys=[project_id]
     )
     booking: Mapped[Booking | None] = relationship()
+
+
+class SalesHandoff(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """AI-to-human sales consultant handoff escalation record."""
+
+    __tablename__ = "sales_handoffs"
+
+    lead_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("leads.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    conversation_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("chat_sessions.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    assigned_to: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("agents.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    reason: Mapped[HandoffReason] = mapped_column(
+        enum_column(HandoffReason, 40), nullable=False, index=True
+    )
+    status: Mapped[HandoffStatus] = mapped_column(
+        enum_column(HandoffStatus, 30),
+        nullable=False,
+        default=HandoffStatus.REQUESTED,
+        index=True,
+    )
+    context_data: Mapped[dict | None] = mapped_column("context_data", JSONB, nullable=True)
+    summary_data: Mapped[dict | None] = mapped_column("summary_data", JSONB, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    knowledge_gap_tracked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    assigned_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    cancelled_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    lead: Mapped[Lead | None] = relationship()
+    conversation: Mapped[ChatSession | None] = relationship()
+    assigned_agent: Mapped[Agent | None] = relationship(foreign_keys=[assigned_to])
+
+
+class WhatsAppMessage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Tracks every WhatsApp message dispatched to a lead."""
+
+    __tablename__ = "whatsapp_messages"
+
+    lead_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("leads.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    conversation_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("chat_sessions.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    phone_number: Mapped[str] = mapped_column(String(20), nullable=False)
+    message_body: Mapped[str] = mapped_column(Text, nullable=False)
+    template_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    status: Mapped[WhatsAppMessageStatus] = mapped_column(
+        enum_column(WhatsAppMessageStatus, 20),
+        nullable=False,
+        default=WhatsAppMessageStatus.PENDING,
+        index=True,
+    )
+    provider_message_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    failed_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    provider_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    lead: Mapped[Lead | None] = relationship(
+        back_populates="whatsapp_messages", foreign_keys=[lead_id]
+    )
+
+
+class SalesNotification(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Tracks sales team notifications for new/hot leads."""
+
+    __tablename__ = "sales_notifications"
+
+    lead_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("leads.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    handoff_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("sales_handoffs.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    channel: Mapped[str] = mapped_column(String(30), nullable=False)
+    status: Mapped[SalesNotificationStatus] = mapped_column(
+        enum_column(SalesNotificationStatus, 20),
+        nullable=False,
+        default=SalesNotificationStatus.PENDING,
+        index=True,
+    )
+    recipient: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    subject: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    failed_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    lead: Mapped[Lead | None] = relationship(
+        back_populates="sales_notifications", foreign_keys=[lead_id]
+    )

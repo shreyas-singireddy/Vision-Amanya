@@ -15,6 +15,10 @@ export const routes = {
   amenities: "/amenities",
   properties: "/properties",
   propertyDetail: (slug: string) => `/properties/${slug}` as Route,
+  residences: "/residences" as Route,
+  residenceDetail: (unitId: string) => `/residences/${unitId}` as Route,
+  residencePath: (building: string, floor: string | number, unit: string) =>
+    `/residences/${building}/${floor}/${unit}` as Route,
   masterplan: "/masterplan",
   gallery: "/gallery",
   contact: "/contact",

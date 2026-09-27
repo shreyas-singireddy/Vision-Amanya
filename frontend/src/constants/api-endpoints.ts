@@ -65,10 +65,12 @@ export const apiEndpoints = {
   },
 
   assistant: {
-    sessions: "/assistant/sessions",
-    session: (id: string) => `/assistant/sessions/${id}`,
-    messages: (id: string) => `/assistant/sessions/${id}/messages`,
-    send: "/assistant/chat",
+    sessions: "/ai/conversations",
+    session: (id: string) => `/ai/conversations/${id}`,
+    messages: (id: string) => `/ai/conversations/${id}`,
+    send: "/ai/chat",
+    lead: "/ai/lead",
+    siteVisit: "/ai/site-visit",
   },
 } as const;
 

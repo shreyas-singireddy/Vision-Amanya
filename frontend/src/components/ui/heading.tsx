@@ -20,16 +20,19 @@ export interface EyebrowProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 export const Eyebrow = forwardRef<HTMLSpanElement, EyebrowProps>(
-  ({ className, as: Component = "span", ...props }, ref) => (
-    <Component
-      ref={ref}
-      className={cn(
-        "text-eyebrow font-medium uppercase tracking-eyebrow text-accent-600 dark:text-accent-400",
-        className
-      )}
-      {...props}
-    />
-  )
+  ({ className, as: Component = "span", ...props }, ref) => {
+    const Comp = Component as "span";
+    return (
+      <Comp
+        ref={ref}
+        className={cn(
+          "text-eyebrow font-medium uppercase tracking-eyebrow text-accent-600 dark:text-accent-400",
+          className
+        )}
+        {...props}
+      />
+    );
+  }
 );
 Eyebrow.displayName = "Eyebrow";
 

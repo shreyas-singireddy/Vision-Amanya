@@ -51,7 +51,12 @@ export function SplitSection({
         )}
       >
         <div className="lg:col-span-6">
-          <ImageReveal src={image.src} alt={image.alt} aspect="portrait" className="w-full" />
+          <ImageReveal
+            src={image.src}
+            alt={image.alt}
+            aspect="landscape"
+            className="w-full sm:aspect-[3/4]"
+          />
           {caption ? <p className="mt-3 text-sm text-muted-foreground">{caption}</p> : null}
         </div>
         <div className="lg:col-span-6">

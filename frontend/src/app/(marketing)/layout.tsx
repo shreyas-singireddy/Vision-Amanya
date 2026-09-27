@@ -8,6 +8,9 @@
 
 import { PageTransition } from "@components/motion";
 import { SiteFooter, SiteHeader } from "@components/layout";
+import { AIConsultantTrigger, AIConsultantWidget } from "@components/amnaya/ai-consultant";
+
+import { AskAmnaya, AIChatDrawer } from "@components/ai";
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +20,10 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         <PageTransition>{children}</PageTransition>
       </main>
       <SiteFooter />
+      <AIConsultantTrigger mode="global" />
+      <AIConsultantWidget />
+      <AskAmnaya variant="floating" />
+      <AIChatDrawer />
     </div>
   );
 }

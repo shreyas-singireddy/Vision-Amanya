@@ -1,10 +1,11 @@
 import { Container, Eyebrow } from "@components/ui";
 
 /**
- * Asset verification route — proves the Phase 6.4A pipeline:
- * PDF → extraction → filesystem → Next.js public dir → browser.
+ * Asset verification route — proves the asset pipeline:
+ * source renders → `public/assets/amnaya/renders` → browser.
  *
  * This is a technical verification page only, not a marketing gallery.
+ * Paths below are the canonical, validated renders consumed by `@config/project`.
  */
 
 const assetGroups: {
@@ -13,140 +14,97 @@ const assetGroups: {
   items: { src: string; alt: string; caption: string }[];
 }[] = [
   {
-    label: "Exterior",
-    description: "Extracted from the source PDF (pages 3–5).",
+    label: "Exterior & Architecture",
+    description: "Building elevations and the hero cover.",
     items: [
       {
-        src: "/assets/amnaya/exterior/amnaya-exterior-01.jpeg",
-        alt: "Exterior aerial view",
-        caption: "exterior-01 · page 3",
+        src: "/assets/amnaya/renders/hero-day.jpg",
+        alt: "Amnaya — hero day render",
+        caption: "hero-day.jpg",
       },
       {
-        src: "/assets/amnaya/exterior/amnaya-exterior-03.jpeg",
-        alt: "Exterior building view",
-        caption: "exterior-03 · page 4",
+        src: "/assets/amnaya/renders/hero-dusk.jpg",
+        alt: "Amnaya — hero dusk render",
+        caption: "hero-dusk.jpg",
       },
       {
-        src: "/assets/amnaya/exterior/amnaya-exterior-04.jpeg",
-        alt: "Exterior front view",
-        caption: "exterior-04 · page 5",
-      },
-    ],
-  },
-  {
-    label: "Architecture",
-    description: "Architectural design render (page 6).",
-    items: [
-      {
-        src: "/assets/amnaya/architecture/amnaya-architecture-01.jpeg",
-        alt: "Architectural design",
-        caption: "architecture-01 · page 6",
+        src: "/assets/amnaya/renders/building-day.jpg",
+        alt: "Amnaya — building day render",
+        caption: "building-day.jpg",
       },
       {
-        src: "/assets/amnaya/entrance/amnaya-entrance-01.jpeg",
-        alt: "Grand entrance",
-        caption: "entrance-01 · page 7",
-      },
-    ],
-  },
-  {
-    label: "Amenities & Lifestyle",
-    description: "Amenity and lifestyle imagery (pages 8, 11).",
-    items: [
-      {
-        src: "/assets/amnaya/amenities/amnaya-amenities-01.jpeg",
-        alt: "Amenities overview",
-        caption: "amenities-01 · page 11",
+        src: "/assets/amnaya/renders/building-day-2.jpg",
+        alt: "Amnaya — second day elevation",
+        caption: "building-day-2.jpg",
       },
       {
-        src: "/assets/amnaya/lifestyle/amnaya-lifestyle-01.jpeg",
-        alt: "Lifestyle imagery",
-        caption: "lifestyle-01 · page 8",
+        src: "/assets/amnaya/renders/building-mid.jpg",
+        alt: "Amnaya — mid-day elevation",
+        caption: "building-mid.jpg",
       },
       {
-        src: "/assets/amnaya/pool/amnaya-pool-01.jpeg",
-        alt: "Rooftop pool",
-        caption: "pool-01 · page 14",
+        src: "/assets/amnaya/renders/dusk-building.jpg",
+        alt: "Amnaya — dusk building render",
+        caption: "dusk-building.jpg",
       },
     ],
   },
   {
     label: "Landscape & Lake",
-    description: "Garden and lake views (pages 15–16).",
+    description: "Garden and 25-acre lake views.",
     items: [
       {
-        src: "/assets/amnaya/landscape/amnaya-landscape-01.jpeg",
-        alt: "Landscaped garden",
-        caption: "landscape-01 · page 15",
+        src: "/assets/amnaya/renders/landscape.jpg",
+        alt: "Amnaya — landscaped garden",
+        caption: "landscape.jpg",
       },
       {
-        src: "/assets/amnaya/lake/amnaya-lake-01.jpeg",
-        alt: "25-acre lake view",
-        caption: "lake-01 · page 16",
+        src: "/assets/amnaya/renders/lake-view.jpg",
+        alt: "Amnaya — 25-acre lake view",
+        caption: "lake-view.jpg",
       },
     ],
   },
   {
-    label: "Masterplan",
-    description: "Official master / layout plans (pages 17–18).",
+    label: "Amenities & Clubhouse",
+    description: "Clubhouse and community spaces.",
     items: [
       {
-        src: "/assets/amnaya/masterplan/amnaya-masterplan-01.jpeg",
-        alt: "Official master plan",
-        caption: "masterplan-01 · page 17",
+        src: "/assets/amnaya/renders/clubhouse.jpg",
+        alt: "Amnaya — clubhouse render",
+        caption: "clubhouse.jpg",
       },
       {
-        src: "/assets/amnaya/masterplan/amnaya-masterplan-02.jpeg",
-        alt: "Detailed layout plan",
-        caption: "masterplan-02 · page 18",
+        src: "/assets/amnaya/renders/panorama.jpg",
+        alt: "Amnaya — panoramic render",
+        caption: "panorama.jpg",
+      },
+    ],
+  },
+  {
+    label: "Masterplan & Location",
+    description: "Site layout and location context.",
+    items: [
+      {
+        src: "/assets/amnaya/renders/masterplan.jpg",
+        alt: "Amnaya — official masterplan",
+        caption: "masterplan.jpg",
+      },
+      {
+        src: "/assets/amnaya/renders/location.jpg",
+        alt: "Amnaya — location context",
+        caption: "location.jpg",
       },
     ],
   },
   {
     label: "Floor Plans",
-    description: "Residence floor plans (page 19).",
+    description: "Residence floor-plan sheets.",
     items: [
       {
-        src: "/assets/amnaya/floorplans/amnaya-floorplans-01.jpeg",
-        alt: "3 BHK floor plan",
-        caption: "floorplans-01 · page 19",
-      },
-    ],
-  },
-  {
-    label: "Clubhouse & Interior",
-    description: "Clubhouse and interior renders (pages 9–13).",
-    items: [
-      {
-        src: "/assets/amnaya/clubhouse/amnaya-clubhouse-01.jpeg",
-        alt: "Clubhouse",
-        caption: "clubhouse-01 · page 12",
-      },
-      {
-        src: "/assets/amnaya/interior/amnaya-interior-01.jpeg",
-        alt: "Interior living space",
-        caption: "interior-01 · page 9",
-      },
-      {
-        src: "/assets/amnaya/interior/amnaya-interior-02.jpeg",
-        alt: "Interior bedroom",
-        caption: "interior-02 · page 10",
-      },
-    ],
-  },
-  {
-    label: "Hero & Location",
-    description: "Hero cover and location context (pages 1, 21).",
-    items: [
-      {
-        src: "/assets/amnaya/hero/amnaya-hero-01.jpeg",
-        alt: "Project cover",
-        caption: "hero-01 · page 1",
-      },
-      {
-        src: "/assets/amnaya/location/amnaya-location-01.jpeg",
-        alt: "Location context",
-        caption: "location-01 · page 21",
+        src: "/assets/amnaya/floor-plans/floor-plan-01.jpg",
+        alt: "Amnaya — 3 BHK floor plan",
+        caption: "floor-plan-01.jpg",
       },
     ],
   },
@@ -173,9 +131,9 @@ export default function AssetTestPage() {
               <h2 className="font-serif text-2xl font-medium text-foreground">{group.label}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{group.description}</p>
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {group.items.map((item, idx) => (
+                {group.items.map((item) => (
                   <figure
-                    key={`${item.key}-${item.src}-${idx}`}
+                    key={item.src}
                     className="overflow-hidden rounded-card border border-border bg-card"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -6,10 +6,12 @@ import { useEffect, type PropsWithChildren } from "react";
 
 import { setSessionExpiredHandler } from "@api/refresh";
 
+import { CursorFollower } from "@components/amnaya";
 import { SmoothScrollProvider } from "@components/providers/smooth-scroll-provider";
 
 import { useAuthStore, syncUserStore } from "@store/index";
 
+import { AIContextProvider } from "./AIContextProvider";
 import { QueryProvider } from "./query-provider";
 import { ThemeProvider } from "./theme-provider";
 import { ToastProvider } from "./toast-provider";
@@ -45,10 +47,13 @@ export function RootProvider({ children }: PropsWithChildren) {
 
   return (
     <SmoothScrollProvider>
+      <CursorFollower />
       <QueryProvider>
         <ThemeProvider />
         <ToastProvider />
-        {children}
+        <AIContextProvider>
+          {children}
+        </AIContextProvider>
       </QueryProvider>
     </SmoothScrollProvider>
   );

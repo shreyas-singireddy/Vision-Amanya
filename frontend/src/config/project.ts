@@ -81,6 +81,10 @@ export const projectAssets = {
 
   /* ── Floor Plans ──────────────────────────────────────────── */
   floorplans: "/assets/amnaya/floor-plans/floor-plan-01.jpg",
+  floorplanA: "/assets/amnaya/floor-plans/floor-plan-01.jpg",
+  floorplanB: "/assets/amnaya/floor-plans/floor-plan-02.jpg",
+  floorplanC: "/assets/amnaya/floor-plans/floor-plan-03.jpg",
+  blockPlan: "/assets/amnaya/floor-plans/floor-plan-04.jpg",
 
   /* ── Render aliases (used by gallery, design pages) ──────── */
   buildingDay: "/assets/amnaya/renders/building-day.jpg",

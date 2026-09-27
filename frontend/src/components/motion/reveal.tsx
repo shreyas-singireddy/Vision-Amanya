@@ -13,12 +13,12 @@
  * specific element.
  */
 
-import { motion, type HTMLMotionProps } from "framer-motion";
+import type { HTMLMotionProps } from "framer-motion";
 import { forwardRef, type ElementType } from "react";
 
 import { useReducedMotionPreference } from "@hooks/use-reduced-motion";
 
-import { fadeDirectionVariant, withDelay, type MotionDirection } from "@lib/motion";
+import { fadeDirectionVariant, withDelay, getMotionTag, type MotionDirection } from "@lib/motion";
 
 export interface RevealProps extends HTMLMotionProps<"div"> {
   /** Travel direction; `"up"` by default (0 distance = pure fade). */
@@ -53,7 +53,7 @@ export const Reveal = forwardRef<HTMLDivElement, RevealProps>(
     ref
   ) => {
     const reduced = useReducedMotionPreference();
-    const MotionTag = motion.create(as);
+    const MotionTag = getMotionTag(as);
 
     const variants =
       reduced || distance === 0

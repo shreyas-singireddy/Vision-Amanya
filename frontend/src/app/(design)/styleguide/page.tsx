@@ -99,6 +99,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@components/ui";
+import {
+  ArchitecturalGrid,
+  HorizontalLine,
+  LuxuryButton,
+  MagneticButton,
+  ScrollIndicator,
+  SectionHeading,
+} from "@components/amnaya";
 import { ui, useUIStore } from "@store/ui.store";
 import { routes } from "@constants/routes";
 import { cn } from "@utils/cn";
@@ -1292,6 +1300,139 @@ export default function StyleguidePage() {
         <div className="mt-10">
           <SubLabel>Loading state</SubLabel>
           <LoadingState label="Loading residences" />
+        </div>
+      </Section>
+
+      {/* ── AMNAYA-specific components ─────────────────────────────── */}
+      <Section
+        id="amnaya-components"
+        label="Phase 6.2 — AMNAYA"
+        title="AMNAYA design vocabulary"
+        description="Brand-specific components for the luxury marketing experience. Import from @components/amnaya — never use these in utility/dashboard views."
+      >
+        {/* LuxuryButton */}
+        <div className="mb-10">
+          <SubLabel>LuxuryButton — pill CTA variants</SubLabel>
+          <div className="mt-6 flex flex-wrap items-center gap-4 rounded-card border border-border bg-card p-8">
+            <LuxuryButton variant="accent">Book a Visit</LuxuryButton>
+            <LuxuryButton variant="primary">View Residences</LuxuryButton>
+            <LuxuryButton variant="dark" size="md">
+              Learn More
+            </LuxuryButton>
+            <LuxuryButton variant="accent" size="sm" arrow={false}>
+              Explore
+            </LuxuryButton>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-4 rounded-card bg-neutral-950 p-8">
+            <LuxuryButton variant="ghost">Explore Amnaya</LuxuryButton>
+            <LuxuryButton variant="accent">Schedule a Visit</LuxuryButton>
+          </div>
+        </div>
+
+        {/* MagneticButton */}
+        <div className="mb-10">
+          <SubLabel>MagneticButton — cursor-attracted CTA (desktop only)</SubLabel>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Move your cursor slowly over the button to feel the magnetic attraction. Disabled on
+            touch and reduced motion.
+          </p>
+          <div className="flex flex-wrap gap-6 rounded-card border border-border bg-card p-8">
+            <MagneticButton>Explore Amnaya</MagneticButton>
+            <MagneticButton radius={40}>Schedule a Visit</MagneticButton>
+          </div>
+        </div>
+
+        {/* SectionHeading */}
+        <div className="mb-10">
+          <SubLabel>SectionHeading — animated editorial header</SubLabel>
+          <div className="mt-6 space-y-12 rounded-card border border-border bg-card p-8">
+            <SectionHeading
+              eyebrow="Architecture"
+              title="Where Khajaguda meets the lake"
+              description="420 premium 3 BHK residences across 5.3 acres, framed by 2 acres of central garden and an unobstructed 25-acre lake view."
+              line
+            />
+            <SectionHeading
+              eyebrow="Location"
+              title="The most coveted address in Hyderabad"
+              align="center"
+            />
+          </div>
+          <div className="mt-4 rounded-card bg-navy-900 p-8">
+            <SectionHeading
+              eyebrow="Residences"
+              title="Crafted for those who live with intention"
+              description="Every detail of Amnaya is designed around the resident's experience — from the double-height stilt entrance to the private sky gardens."
+              inverted
+              line
+            />
+          </div>
+        </div>
+
+        {/* HorizontalLine */}
+        <div className="mb-10">
+          <SubLabel>HorizontalLine — animated architectural divider</SubLabel>
+          <div className="mt-6 space-y-8 rounded-card border border-border bg-card p-8">
+            <div>
+              <p className="mb-3 text-sm text-muted-foreground">Left-to-right (default)</p>
+              <HorizontalLine />
+            </div>
+            <div>
+              <p className="mb-3 text-sm text-muted-foreground">Right-to-left</p>
+              <HorizontalLine direction="rtl" />
+            </div>
+            <div>
+              <p className="mb-3 text-sm text-muted-foreground">Short accent line (w-12)</p>
+              <HorizontalLine className="w-12" />
+            </div>
+          </div>
+          <div className="mt-4 rounded-card bg-navy-900 p-8">
+            <p className="mb-3 text-sm text-neutral-50/50">Inverted variant</p>
+            <HorizontalLine inverted />
+          </div>
+        </div>
+
+        {/* ScrollIndicator */}
+        <div className="mb-10">
+          <SubLabel>ScrollIndicator — animated scroll cue</SubLabel>
+          <div className="mt-6 flex flex-wrap gap-12 rounded-card bg-navy-900 p-8">
+            <ScrollIndicator />
+            <ScrollIndicator label="Discover" />
+            <ScrollIndicator label="" cycleDuration={1.2} />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-12 rounded-card border border-border bg-card p-8">
+            <ScrollIndicator inverted label="Scroll" />
+            <ScrollIndicator inverted label="Continue" />
+          </div>
+        </div>
+
+        {/* ArchitecturalGrid */}
+        <div className="mb-10">
+          <SubLabel>ArchitecturalGrid — structural overlay</SubLabel>
+          <p className="mb-4 text-sm text-muted-foreground">
+            The grid is position: absolute inset-0 — the parent must be position: relative. Default
+            opacity is near-invisible (3–5%).
+          </p>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="relative h-48 rounded-card bg-navy-900">
+              <ArchitecturalGrid columns={6} surface="dark" />
+              <div className="absolute inset-0 flex items-end p-4">
+                <span className="text-xs text-neutral-50/40">lines · dark · 6 cols</span>
+              </div>
+            </div>
+            <div className="relative h-48 rounded-card bg-navy-900">
+              <ArchitecturalGrid columns={8} surface="dark" variant="cross" />
+              <div className="absolute inset-0 flex items-end p-4">
+                <span className="text-xs text-neutral-50/40">cross · dark · 8 cols</span>
+              </div>
+            </div>
+            <div className="relative h-48 rounded-card border border-border bg-muted">
+              <ArchitecturalGrid columns={6} surface="light" />
+              <div className="absolute inset-0 flex items-end p-4">
+                <span className="text-xs text-muted-foreground">lines · light · 6 cols</span>
+              </div>
+            </div>
+          </div>
         </div>
       </Section>
 

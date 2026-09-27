@@ -50,3 +50,6 @@ export { LoadingTransition } from "./loading-transition";
 export type { LoadingTransitionProps } from "./loading-transition";
 
 export { CinematicIntro } from "./cinematic-intro";
+
+export { ImmersiveHero } from "./immersive-hero";
+export type { ImmersiveHeroProps } from "./immersive-hero";

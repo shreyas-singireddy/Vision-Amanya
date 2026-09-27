@@ -113,10 +113,53 @@ class LeadStatus(StrEnum):
     NEW = "new"
     CONTACTED = "contacted"
     QUALIFIED = "qualified"
+    SITE_VISIT = "site_visit"
     PROPOSAL = "proposal"
     NEGOTIATION = "negotiation"
+    NURTURE = "nurture"
     WON = "won"
     LOST = "lost"
+
+
+class LeadTemperature(StrEnum):
+    """Lead heat classification derived from lead score."""
+
+    COLD = "cold"          # 0–30
+    WARM = "warm"          # 31–60
+    HOT = "hot"            # 61–80
+    HIGH_INTENT = "high_intent"  # 81–100
+
+
+class ConvStage(StrEnum):
+    """Conversational lead-qualification state machine stages."""
+
+    DISCOVERY = "discovery"
+    PROFILE_BUILDING = "profile_building"
+    REQUIREMENT_DISCOVERY = "requirement_discovery"
+    UNIT_RECOMMENDATION = "unit_recommendation"
+    INTEREST_IDENTIFICATION = "interest_identification"
+    CONTACT_PERMISSION = "contact_permission"
+    CONTACT_CAPTURE = "contact_capture"
+    SALES_HANDOFF = "sales_handoff"
+    FOLLOW_UP = "follow_up"
+
+
+class WhatsAppMessageStatus(StrEnum):
+    """Delivery lifecycle of a WhatsApp message."""
+
+    PENDING = "pending"
+    SENT = "sent"
+    DELIVERED = "delivered"
+    FAILED = "failed"
+    SIMULATED = "simulated"    # mock provider — not actually sent
+
+
+class SalesNotificationStatus(StrEnum):
+    """Delivery lifecycle of a sales team notification."""
+
+    PENDING = "pending"
+    SENT = "sent"
+    FAILED = "failed"
 
 
 class LeadPriority(StrEnum):
@@ -250,3 +293,81 @@ class AccessLevel(StrEnum):
 
     PUBLIC = "public"
     PRIVATE = "private"
+
+
+class KnowledgeCategory(StrEnum):
+    """Domain classifications for AI knowledge items."""
+
+    PROJECT = "project"
+    LOCATION = "location"
+    LANDSCAPE = "landscape"
+    ARCHITECTURE = "architecture"
+    PLANNING = "planning"
+    RESIDENCE = "residence"
+    SPECIFICATION = "specification"
+    AMENITY = "amenity"
+    CONNECTIVITY = "connectivity"
+    DEVELOPER = "developer"
+    PRICING = "pricing"
+    AVAILABILITY = "availability"
+    LEGAL = "legal"
+    RERA = "rera"
+    FINANCE = "finance"
+    FAQ = "faq"
+    MARKETING = "marketing"
+
+
+class ClaimType(StrEnum):
+    """Fact vs marketing claim taxonomy."""
+
+    FACT = "fact"
+    MARKETING_CLAIM = "marketing_claim"
+    COMPARATIVE_CLAIM = "comparative_claim"
+    LIFESTYLE_CLAIM = "lifestyle_claim"
+    UNKNOWN = "unknown"
+
+
+class VerificationStatus(StrEnum):
+    """Verification provenance state of a knowledge item."""
+
+    VERIFIED = "verified"
+    PROVIDED_UNVERIFIED = "provided_unverified"
+    REQUIRES_VERIFICATION = "requires_verification"
+    DEPRECATED = "deprecated"
+
+
+class HandoffStatus(StrEnum):
+    """Lifecycle stages of a human sales consultant handoff."""
+
+    REQUESTED = "REQUESTED"
+    QUEUED = "QUEUED"
+    ASSIGNED = "ASSIGNED"
+    ACCEPTED = "ACCEPTED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+
+class HandoffReason(StrEnum):
+    """Business triggers for AI-to-human sales consultant handoff."""
+
+    EXPLICIT_HUMAN_REQUEST = "explicit_human_request"
+    UNKNOWN_VERIFIED_INFORMATION = "unknown_verified_information"
+    NEGOTIATION_REQUEST = "negotiation_request"
+    CUSTOM_REQUIREMENT = "custom_requirement"
+    HIGH_INTENT_LEAD = "high_intent_lead"
+    COMPLEX_FINANCIAL_QUESTION = "complex_financial_question"
+    COMPLAINT = "complaint"
+    REPEATED_AI_FAILURE = "repeated_ai_failure"
+    SALES_FOLLOWUP_REQUEST = "sales_followup_request"
+
+
+class AssignmentStrategy(StrEnum):
+    """Routing strategies for assigning sales consultants."""
+
+    ROUND_ROBIN = "round_robin"
+    LEAST_ACTIVE = "least_active"
+    AVAILABILITY_BASED = "availability_based"
+    MANUAL_ASSIGNMENT = "manual_assignment"
+
+

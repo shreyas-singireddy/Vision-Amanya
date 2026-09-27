@@ -33,6 +33,7 @@ import {
   motionBlur,
   motionHover,
   motionParallax,
+  getMotionTag,
   type MotionDirection,
   type MotionParallax,
 } from "@lib/motion";
@@ -60,7 +61,7 @@ const ScrollRevealBase = forwardRef<HTMLDivElement, BaseRevealProps & { variants
     ref
   ) => {
     const reduced = useReducedMotionPreference();
-    const MotionTag = motion.create(as);
+    const MotionTag = getMotionTag(as);
     const active = !reduced;
 
     return (
@@ -338,7 +339,7 @@ const sectionVariants: Record<NonNullable<SectionTransitionProps["reveal"]>, Var
 export const SectionTransition = forwardRef<HTMLElement, SectionTransitionProps>(
   ({ theme = "light", reveal = "slide", as = "section", className, ...props }, ref) => {
     const reduced = useReducedMotionPreference();
-    const MotionTag = motion.create(as);
+    const MotionTag = getMotionTag(as);
 
     return (
       <MotionTag

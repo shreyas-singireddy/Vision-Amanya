@@ -1,0 +1,426 @@
+"use client";
+
+/**
+ * FloorPlanViewer — the interactive floor plan stage.
+ *
+ * Renders a verified raster floor plan image with an SVG unit overlay,
+ * supporting:
+ *   - bounded smooth zoom (wheel / buttons / touch pinch)
+ *   - pan with viewport bounds (mouse drag / touch drag)
+ *   - fit-to-screen & reset
+ *   - unit hover + selection via SVG polygons using stable `data-unit-id`
+ *   - invisible larger hit areas for touch-friendly targets
+ *   - reduced-motion compliance
+ *
+ * When an SVG floor plan asset is supplied (`kind === 'svg'`), the asset is
+ * rendered directly inside the stage `<svg>` and the unit overlay is layered
+ * on top. When the asset is a raster image, the image is rendered beneath the
+ * overlay with a matching aspect ratio (preserving the architectural drawing).
+ */
+
+import { useCallback, useEffect, useMemo, useRef } from "react";
+
+import { UNIT_STATUS_CONFIG } from "@config/floor-plan-statuses";
+import type { FloorPlanFloor, FloorPlanUnit } from "@domain/floor-plan";
+import { useFloorPlanStore } from "@store/floor-plan.store";
+import { useReducedMotionPreference } from "@hooks/use-reduced-motion";
+
+import { cn } from "@utils/cn";
+
+export interface FloorPlanViewerProps {
+  floor: FloorPlanFloor;
+  /** When true, disables interaction (used by static contexts). */
+  readonly?: boolean;
+  className?: string;
+}
+
+/** Zoom bounds relative to the fit-to-screen baseline. */
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 4;
+
+/** SVG stage size — a 1000×1000 normalized coordinate space. */
+const STAGE_SIZE = 1000;
+
+export function FloorPlanViewer({ floor, readonly = false, className }: FloorPlanViewerProps) {
+  const reduced = useReducedMotionPreference();
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef({ pointerId: -1, startX: 0, startY: 0, originX: 0, originY: 0 });
+
+  const viewport = useFloorPlanStore((s) => s.viewport);
+  const setViewport = useFloorPlanStore((s) => s.setViewport);
+  const hoveredUnitId = useFloorPlanStore((s) => s.hoveredUnitId);
+  const setHoveredUnitId = useFloorPlanStore((s) => s.setHoveredUnitId);
+  const selectedUnitId = useFloorPlanStore((s) => s.unitId);
+  const selectUnit = useFloorPlanStore((s) => s.selectUnit);
+
+  /* ── Fit-to-screen ------------------------------------------------------ */
+  const fitToScreen = useCallback(() => {
+    const el = stageRef.current;
+    const container = containerRef.current;
+    if (!el || !container) return;
+
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    if (!containerWidth || !containerHeight) return;
+
+    // Stage fills its container with the SVG preserving aspect ratio.
+    const scale = Math.min(containerWidth / STAGE_SIZE, containerHeight / STAGE_SIZE);
+    setViewport({ scale, offsetX: 0, offsetY: 0 });
+  }, [setViewport]);
+
+  // Fit on floor change and initial mount.
+  useEffect(() => {
+    fitToScreen();
+  }, [floor.id, fitToScreen]);
+
+  /* ── Wheel zoom (desktop) ---------------------------------------------- */
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      if (readonly) return;
+      e.preventDefault();
+      const container = containerRef.current;
+      if (!container) return;
+
+      // Zoom anchored at the cursor position.
+      const rect = container.getBoundingClientRect();
+      const pointerX = e.clientX - rect.left;
+      const pointerY = e.clientY - rect.top;
+
+      const nextScale = clamp(viewport.scale * (e.deltaY < 0 ? 1.12 : 1 / 1.12), MIN_ZOOM, MAX_ZOOM);
+      const ratio = nextScale / viewport.scale;
+
+      // World point under cursor (stage coordinates before zoom).
+      const worldX = (pointerX - viewport.offsetX) / viewport.scale;
+      const worldY = (pointerY - viewport.offsetY) / viewport.scale;
+
+      // New offset so the world point stays under the cursor.
+      const offsetX = pointerX - worldX * ratio;
+      const offsetY = pointerY - worldY * ratio;
+
+      setViewport({ scale: nextScale, offsetX, offsetY });
+    },
+    [readonly, viewport, setViewport]
+  );
+
+  /* ── Drag / pan (mouse + touch) ---------------------------------------- */
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (readonly) return;
+      // Ignore drag when interacting with a unit polygon.
+      if ((e.target as HTMLElement).closest('[data-unit-id]')) return;
+
+      const container = containerRef.current;
+      if (!container) return;
+
+      dragRef.current = {
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY,
+        originX: viewport.offsetX,
+        originY: viewport.offsetY,
+      };
+
+      (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    },
+    [readonly, viewport]
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (readonly) return;
+      const drag = dragRef.current;
+      if (drag.pointerId === -1) return;
+
+      const dx = e.clientX - drag.startX;
+      const dy = e.clientY - drag.startY;
+
+      setViewport({
+        offsetX: drag.originX + dx,
+        offsetY: drag.originY + dy,
+      });
+    },
+    [readonly, setViewport]
+  );
+
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      if (dragRef.current.pointerId === e.pointerId) {
+        dragRef.current = { pointerId: -1, startX: 0, startY: 0, originX: 0, originY: 0 };
+      }
+    },
+    []
+  );
+
+  /* ── Touch pinch zoom (mobile) ----------------------------------------- */
+  const pinchRef = useRef({
+    active: false,
+    startDistance: 0,
+    startScale: 1,
+    startMidX: 0,
+    startMidY: 0,
+    startOffsetX: 0,
+    startOffsetY: 0,
+  });
+
+  const touchDistance = (touches: TouchList) => {
+    const [a, b] = [touches[0], touches[1]];
+    if (!a || !b) return 0;
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (readonly) return;
+    if (e.touches.length === 2) {
+      const distance = touchDistance(e.touches);
+      if (distance > 0) {
+        pinchRef.current = {
+          active: true,
+          startDistance: distance,
+          startScale: viewport.scale,
+          startMidX: (e.touches[0]!.clientX + e.touches[1]!.clientX) / 2,
+          startMidY: (e.touches[0]!.clientY + e.touches[1]!.clientY) / 2,
+          startOffsetX: viewport.offsetX,
+          startOffsetY: viewport.offsetY,
+        };
+      }
+      return;
+    }
+    if (e.touches.length === 1) {
+      dragRef.current = {
+        pointerId: -2,
+        startX: e.touches[0]!.clientX,
+        startY: e.touches[0]!.clientY,
+        originX: viewport.offsetX,
+        originY: viewport.offsetY,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (readonly) return;
+    const pinch = pinchRef.current;
+
+    if (pinch.active && e.touches.length === 2) {
+      const distance = touchDistance(e.touches);
+      if (distance > 0) {
+        const nextScale = clamp(
+          pinch.startScale * (distance / pinch.startDistance),
+          MIN_ZOOM,
+          MAX_ZOOM
+        );
+        const midX = (e.touches[0]!.clientX + e.touches[1]!.clientX) / 2;
+        const midY = (e.touches[0]!.clientY + e.touches[1]!.clientY) / 2;
+
+        // Zoom toward the pinch mid-point.
+        const container = containerRef.current;
+        const rect = container?.getBoundingClientRect();
+        const px = midX - (rect?.left ?? 0);
+        const py = midY - (rect?.top ?? 0);
+
+        const ratio = nextScale / pinch.startScale;
+        const worldX = (pinch.startMidX - (rect?.left ?? 0) - pinch.startOffsetX) / pinch.startScale;
+        const worldY = (pinch.startMidY - (rect?.top ?? 0) - pinch.startOffsetY) / pinch.startScale;
+
+        setViewport({
+          scale: nextScale,
+          offsetX: px - worldX * ratio,
+          offsetY: py - worldY * ratio,
+        });
+      }
+      return;
+    }
+
+    if (dragRef.current.pointerId === -2 && e.touches.length === 1) {
+      const dx = e.touches[0]!.clientX - dragRef.current.startX;
+      const dy = e.touches[0]!.clientY - dragRef.current.startY;
+      setViewport({
+        offsetX: dragRef.current.originX + dx,
+        offsetY: dragRef.current.originY + dy,
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    pinchRef.current.active = false;
+    dragRef.current = { pointerId: -1, startX: 0, startY: 0, originX: 0, originY: 0 };
+  };
+
+  /* ── Unit hover & select (event delegation on the SVG) ----------------- */
+  const handleUnitPointerEnter = useCallback(
+    (unit: FloorPlanUnit) => {
+      if (readonly) return;
+      setHoveredUnitId(unit.id);
+    },
+    [readonly, setHoveredUnitId]
+  );
+
+  const handleUnitPointerLeave = useCallback(() => {
+    setHoveredUnitId(null);
+  }, [setHoveredUnitId]);
+
+  const handleUnitClick = useCallback(
+    (unit: FloorPlanUnit) => {
+      if (readonly) return;
+      selectUnit(unit.id);
+      setHoveredUnitId(unit.id);
+    },
+    [readonly, selectUnit, setHoveredUnitId]
+  );
+
+  const unitById = useMemo(
+    () => new Map(floor.units.map((u) => [u.id, u])),
+    [floor.units]
+  );
+
+  return (
+    <div
+      ref={containerRef}
+      role="application"
+      aria-label={`Interactive floor plan — ${floor.assetAlt}. Use the accessible unit list below to explore units.`}
+      className={cn(
+        "relative h-full min-h-[320px] w-full touch-none overflow-hidden rounded-card-lg border border-border bg-surface-subtle shadow-card",
+        className
+      )}
+      onWheel={handleWheel}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Transform stage — the pannable, zoomable world */}
+      <div
+        ref={stageRef}
+        className="absolute inset-0 flex items-center justify-center"
+        style={{
+          transform: `translate(${viewport.offsetX}px, ${viewport.offsetY}px) scale(${viewport.scale})`,
+          transition: reduced ? "none" : "transform 120ms ease-out",
+        }}
+      >
+        <div className="relative flex items-center justify-center" style={{ width: STAGE_SIZE, height: STAGE_SIZE }}>
+          {/* Raster / SVG floor plan */}
+          {floor.kind === "svg" && floor.viewBox ? (
+            <svg viewBox={floor.viewBox} className="absolute inset-0 h-full w-full" role="img" aria-label={floor.assetAlt}>
+              <image href={floor.assetUrl} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" />
+            </svg>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={floor.assetUrl}
+              alt=""
+              aria-hidden
+              draggable={false}
+              className="pointer-events-none absolute h-full w-full object-contain opacity-90 dark:opacity-80"
+            />
+          )}
+
+          {/* Interactive unit overlay */}
+          <svg
+            viewBox={`0 0 ${STAGE_SIZE} ${STAGE_SIZE}`}
+            className="pointer-events-none absolute inset-0 h-full w-full"
+            role="presentation"
+            aria-hidden
+          >
+            <defs>
+              {/* Status pattern for accessibility (non-colour encoding). */}
+              <pattern id="status-reserved" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <rect width="12" height="12" className="fill-accent-200/40 dark:fill-accent-900/30" />
+                <line x1="0" y1="12" x2="12" y2="0" stroke="currentColor" className="text-accent-600/40" strokeWidth="1.5" />
+              </pattern>
+            </defs>
+
+            {floor.units.map((unit) => {
+              const status = STATUS_CONFIG[unit.availability];
+              const isHovered = hoveredUnitId === unit.id;
+              const isSelected = selectedUnitId === unit.id;
+              const interactive = unit.availability === "available" || isSelected;
+
+              return (
+                <g
+                  key={unit.id}
+                  data-unit-id={unit.id}
+                  role={interactive ? "button" : undefined}
+                  tabIndex={interactive ? 0 : -1}
+                  aria-label={unitAccessibilityLabel(
+                    unit.unitNumber,
+                    unit.typology,
+                    unit.carpetAreaSqft,
+                    unit.availability
+                  )}
+                  data-status={unit.availability}
+                  onClick={() => handleUnitClick(unit)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleUnitClick(unit);
+                    }
+                  }}
+                  onMouseEnter={() => handleUnitPointerEnter(unit)}
+                  onMouseLeave={handleUnitPointerLeave}
+                  onFocus={() => handleUnitPointerEnter(unit)}
+                  onBlur={handleUnitPointerLeave}
+                  className={cn(
+                    "pointer-events-auto cursor-pointer transition-[opacity,fill,stroke] duration-fast ease-standard",
+                    !interactive && "pointer-events-none",
+                    isSelected ? "opacity-100" : isHovered ? "opacity-90" : "opacity-60"
+                  )}
+                >
+                  <polygon
+                    points={unit.boundary.polygon}
+                    fill={
+                      unit.availability === "reserved"
+                        ? "url(#status-reserved)"
+                        : undefined
+                    }
+                    className={cn(
+                      "stroke-[3]",
+                      unit.availability === "available"
+                        ? status.fillClass + " " + status.strokeClass
+                        : unit.availability === "reserved"
+                          ? "fill-none "
+                          : "fill-neutral-200/70 stroke-neutral-400 dark:fill-neutral-800/50 dark:stroke-neutral-600",
+                      isSelected && "fill-primary-500/50 stroke-primary-700 stroke-[4] dark:fill-primary-400/40 dark:stroke-primary-300",
+                      isHovered && !isSelected && "fill-primary-400/40 stroke-primary-700 dark:fill-primary-500/30 dark:stroke-primary-300"
+                    )}
+                    strokeLinejoin="round"
+                  />
+                  {/* Invisible larger touch hit area (minimum 44px) */}
+                  <polygon
+                    points={unit.boundary.polygon}
+                    fill="transparent"
+                    stroke="transparent"
+                    style={{ pointerEvents: "stroke" }}
+                    strokeWidth={24}
+                  />
+                  {/* Unit number label */}
+                  <text
+                    x={unit.boundary.labelX}
+                    y={unit.boundary.labelY}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontSize="28"
+                    fontWeight={600}
+                    className={cn(
+                      "pointer-events-none fill-foreground font-sans",
+                      (isHovered || isSelected) && "fill-primary-950 dark:fill-primary-50"
+                    )}
+                  >
+                    {unit.unitNumber}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}

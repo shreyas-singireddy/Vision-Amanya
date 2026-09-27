@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import Image from "next/image";
 
 import { ctaConfig } from "@config/cta";
 import { projectAssets } from "@config/project";
-import { routes } from "@constants/routes";
 
-import { Button } from "@components/ui/button";
-import { Container } from "@components/ui/container";
-import { Eyebrow, DisplayHeading } from "@components/ui/heading";
+import { Eyebrow } from "@components/ui/heading";
 
 import { Section, SectionHeader } from "@components/layout/section";
 import { CtaSection } from "@components/layout/cta-section";

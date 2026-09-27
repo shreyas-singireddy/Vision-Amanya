@@ -29,10 +29,10 @@ const isSectionActive = (href: string) => (pathname: string) =>
 
 export function SiteNavigation({ inverted = false, className }: SiteNavigationProps) {
   return (
-    <nav aria-label="Primary" className={cn("hidden items-center gap-8 lg:flex", className)}>
-      <ul className="flex items-center gap-8">
+    <nav aria-label="Primary" className={cn("hidden min-w-0 items-center lg:flex", className)}>
+      <ul className="flex min-w-0 items-center gap-4 xl:gap-7">
         {chromeNavigation.map((item) => (
-          <li key={item.href}>
+          <li key={item.href} className="shrink-0">
             <NavLink href={item.href} inverted={inverted} active={isSectionActive(item.href)}>
               {item.label}
             </NavLink>
@@ -43,7 +43,10 @@ export function SiteNavigation({ inverted = false, className }: SiteNavigationPr
         asChild
         variant="accent"
         size="sm"
-        className={cn(inverted && "bg-neutral-50 text-neutral-900 hover:bg-neutral-100")}
+        className={cn(
+          "ml-4 shrink-0 xl:ml-7",
+          inverted && "bg-neutral-50 text-neutral-900 hover:bg-neutral-100"
+        )}
       >
         <a href={routes.contact}>{ctaConfig.enquireNow.label}</a>
       </Button>

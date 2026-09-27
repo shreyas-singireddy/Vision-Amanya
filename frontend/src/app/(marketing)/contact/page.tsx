@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { projectAssets } from "@config/project";
 
 import { Button } from "@components/ui/button";
+import { Alert } from "@components/ui/alert";
 import { Eyebrow, DisplayHeading } from "@components/ui/heading";
 import { Input } from "@components/ui/input";
 import { Textarea } from "@components/ui/textarea";
@@ -19,6 +20,9 @@ import { PhoneInput } from "@components/forms/phone-input";
 import { BudgetSelect } from "@components/forms/budget-select";
 import { PreferenceSelect } from "@components/forms/preference-select";
 import { DateInput } from "@components/forms/date-input";
+
+import { useSubmitEnquiry } from "@features/enquiries";
+import type { EnquiryCreate } from "@domain/enquiry";
 
 /** Contact channels — filled once confirmed. */
 const contactDetails = [
@@ -55,17 +59,43 @@ export default function ContactPage() {
   const [date, setDate] = useState("");
   const [budget, setBudget] = useState("");
   const [preferences, setPreferences] = useState<string[]>([]);
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+
+  const { submit, status, lastError, reset } = useSubmitEnquiry();
+
+  /* Clear any previous submission state when the page mounts fresh. */
+  useEffect(() => {
+    reset();
+  }, [reset]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitting(true);
-    // Simulate async submission — in production this calls the backend enquiry endpoint.
-    await new Promise((r) => setTimeout(r, 1200));
-    setSubmitting(false);
-    setSubmitted(true);
+    if (status === "submitting") return;
+
+    const formData = new FormData(e.currentTarget);
+
+    const payload: EnquiryCreate = {
+      name: `${formData.get("firstName") ?? ""} ${formData.get("lastName") ?? ""}`.trim(),
+      email: String(formData.get("email") ?? "").trim(),
+      phone: phone.trim() || null,
+      subject: preferences.length > 0 ? preferences.join(", ") : "General enquiry",
+      message: [
+        String(formData.get("message") ?? "").trim(),
+        budget ? `Budget range: ${budget}` : "",
+        date ? `Preferred visit date: ${date}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      source: "Website",
+    };
+
+    try {
+      await submit(payload);
+    } catch {
+      /* Submission status is surfaced through the store's `lastError`. */
+    }
   };
+
+  const submitting = status === "submitting";
 
   return (
     <>
@@ -97,7 +127,7 @@ export default function ContactPage() {
             and share project information.
           </p>
         }
-        minHeight="min-h-[60vh]"
+        minHeight="min-h-screen"
         depth
         overlay
       />
@@ -115,7 +145,7 @@ export default function ContactPage() {
                 </DisplayHeading>
               </div>
 
-              {submitted ? (
+              {status === "success" ? (
                 <div className="rounded-card-lg border border-primary-200 bg-primary-50 p-8 text-center">
                   <p className="font-serif text-2xl font-medium text-primary-800">
                     Thank you for your enquiry.
@@ -127,6 +157,16 @@ export default function ContactPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
+                  {status === "error" ? (
+                    <Alert
+                      tone="error"
+                      title="We couldn't submit your enquiry"
+                      description={
+                        lastError ??
+                        "Something went wrong. Please try again, or call our sales team directly."
+                      }
+                    />
+                  ) : null}
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field label="First name" required>
                       <Input
@@ -202,7 +242,7 @@ export default function ContactPage() {
                     loading={submitting}
                     className="self-start"
                   >
-                    Submit enquiry
+                    {submitting ? "Submitting…" : "Submit enquiry"}
                   </Button>
                 </form>
               )}

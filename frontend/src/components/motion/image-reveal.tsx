@@ -22,7 +22,7 @@ import { useReducedMotionPreference } from "@hooks/use-reduced-motion";
 
 import { easings } from "@constants/design-tokens";
 
-import { clipRevealVariant, type MotionDirection } from "@lib/motion";
+import { clipRevealVariant, getMotionTag, type MotionDirection } from "@lib/motion";
 
 import { cn } from "@utils/cn";
 
@@ -79,7 +79,7 @@ export const ImageReveal = forwardRef<HTMLElement, ImageRevealProps>(
     ref
   ) => {
     const reduced = useReducedMotionPreference();
-    const MotionTag = motion.create(as);
+    const MotionTag = getMotionTag(as);
 
     return (
       <MotionTag

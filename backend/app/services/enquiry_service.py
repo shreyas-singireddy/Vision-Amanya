@@ -34,7 +34,23 @@ class EnquiryService(BaseService):
     ) -> Enquiry:
         """Create an enquiry (public; no auth required)."""
         if payload.property_id is None and payload.project_id is None:
-            raise BusinessException("An enquiry must reference a property or project.", error_code="enquiry_reference_required")
+            from sqlalchemy import select
+            from app.models.property import Project
+
+            stmt = select(Project).limit(1)
+            project = await self.db.scalar(stmt)
+            if project:
+                payload.project_id = project.id
+            else:
+                project = Project(
+                    name="Vision Amnaya",
+                    slug="vision-amanya",
+                    description="Premier luxury residences at Khajaguda, Hyderabad",
+                    location="Khajaguda, Hyderabad",
+                )
+                self.db.add(project)
+                await self.db.flush()
+                payload.project_id = project.id
         enquiry = Enquiry(
             property_id=payload.property_id,
             project_id=payload.project_id,

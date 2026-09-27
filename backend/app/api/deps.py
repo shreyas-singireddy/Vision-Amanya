@@ -55,7 +55,22 @@ async def get_current_user(
     return user
 
 
+async def get_optional_user(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> User | None:
+    """Resolve user if bearer token is provided; return None for unauthenticated guests."""
+    if credentials is None or credentials.credentials is None:
+        return None
+    try:
+        user = await get_current_user(credentials, db)
+        return user
+    except AuthenticationException:
+        return None
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
 
 
 async def require_active_user(user: CurrentUser) -> User:

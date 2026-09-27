@@ -1,16 +1,68 @@
 /**
- * AI assistant DTOs.
+ * AI Assistant DTOs & Structured Response Contracts.
  *
- * The backend persists `chat_sessions` / `chat_messages` (see
- * `backend/app/models/chat.py`) but the streaming RAG endpoint is still being
- * wired to the LangChain workspace. These types describe the future contract;
- * endpoint paths live in `@constants/api-endpoints`.
+ * Synchronized with FastAPI backend AI router schemas (`backend/app/schemas/ai.py`).
  */
 
 import type { ISODateTimeString, UUID } from "./api";
 import type { ChatMessageRole, ChatSessionStatus } from "./enums";
 
-/** A single conversational thread. */
+export type AIResponseType =
+  | "text"
+  | "unit_recommendation"
+  | "unit_comparison"
+  | "floor_plan"
+  | "site_visit"
+  | "lead_capture"
+  | "handoff"
+  | "error";
+
+export interface AIChatContext {
+  page_type?: string | null;
+  page_id?: string | null;
+  project_id?: string | null;
+  residence_id?: string | null;
+  unit_id?: string | null;
+  floor_plan_id?: string | null;
+  view_id?: string | null;
+  location_id?: string | null;
+  selected_units?: string[];
+  context_source?: string | null;
+  user_preferences?: Record<string, unknown> | null;
+  currentPage?: string | null;
+  currentUnitId?: string | null;
+  currentProjectId?: string | null;
+  floorPlanMetadata?: Record<string, unknown> | null;
+}
+
+export interface AICitation {
+  document_title: string;
+  document_type?: string | null;
+  snippet: string;
+  source_url?: string | null;
+  page_number?: number | null;
+}
+
+export interface AISuggestedAction {
+  label: string;
+  action_type: "navigate" | "chat_prompt" | "open_modal" | "site_visit" | "compare" | string;
+  payload: Record<string, unknown>;
+}
+
+export interface AIStructuredResponse {
+  conversation_id: UUID;
+  message: string;
+  response_type: AIResponseType;
+  intent: string;
+  confidence: number;
+  citations: AICitation[];
+  suggested_actions: AISuggestedAction[];
+  units: Record<string, unknown>[];
+  floor_plan_context?: Record<string, unknown> | null;
+  lead_context?: Record<string, unknown> | null;
+  metadata: Record<string, unknown>;
+}
+
 export interface ChatSession {
   id: UUID;
   user_id?: UUID | null;
@@ -24,7 +76,6 @@ export interface ChatSession {
   updated_at: ISODateTimeString;
 }
 
-/** One exchange inside a chat session. */
 export interface ChatMessage {
   id: UUID;
   session_id: UUID;
@@ -35,35 +86,35 @@ export interface ChatMessage {
   tokens_total?: number | null;
   model?: string | null;
   latency_ms?: number | null;
-  /** Citation sources returned by the RAG pipeline. */
   sources?: Record<string, unknown> | null;
+  structured_response?: AIStructuredResponse | null;
   feedback?: number | null;
   feedback_comment?: string | null;
   created_at: ISODateTimeString;
 }
 
-/** Payload for sending a new message. */
 export interface AssistantMessageRequest {
-  session_id?: UUID | null;
-  content: string;
-  persona?: string | null;
+  conversation_id?: UUID | null;
+  message: string;
+  context?: AIChatContext | null;
+  guest_id?: string | null;
 }
 
-/** Streaming/non-streaming response of the assistant endpoint. */
-export interface AssistantMessageResponse {
-  message: ChatMessage;
-  session_id: UUID;
+export interface AILeadCaptureRequest {
+  conversation_id?: UUID | null;
+  full_name: string;
+  phone: string;
+  email?: string | null;
+  preferred_unit_id?: string | null;
+  notes?: string | null;
 }
 
-/** Query params for `GET /assistant/sessions`. */
-export interface ChatSessionListParams {
-  page?: number;
-  page_size?: number;
-  status?: ChatSessionStatus;
-}
-
-/** Query params for `GET /assistant/sessions/{id}/messages`. */
-export interface ChatMessageListParams {
-  page?: number;
-  page_size?: number;
+export interface AISiteVisitRequest {
+  conversation_id?: UUID | null;
+  full_name: string;
+  phone: string;
+  email?: string | null;
+  preferred_date: string;
+  preferred_unit_id?: string | null;
+  notes?: string | null;
 }

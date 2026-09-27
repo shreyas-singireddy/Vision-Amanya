@@ -60,7 +60,7 @@ export function FloatingEnquiry() {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ duration: 0.3 }}
-            className="fixed bottom-0 inset-x-0 z-[110] block lg:hidden border-t border-border bg-background/95 p-3.5 backdrop-blur-md shadow-card"
+            className="fixed bottom-0 inset-x-0 z-[110] block lg:hidden border-t border-border bg-background/95 p-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] backdrop-blur-md shadow-card"
           >
             <div className="mx-auto flex max-w-md items-center justify-between gap-3">
               <Link

@@ -131,24 +131,47 @@ class ConversationManager:
         state: ConversationState,
         extraction: Any,  # ExtractionResult from profile_extractor
     ) -> ConversationState:
-        """Apply extraction results to the lead profile. Only overwrites non-None values."""
+        """Apply extraction results to the lead profile.
+
+        Identity fields (name, location, purpose) are set once and kept.
+        Correctable fields (budget, timeline, view, floor, orientation) are
+        always overwritten when a new value is extracted from the message.
+        This allows corrections such as:
+            'My budget is 2 crore' → later 'Actually 2.5 crore'
+        to update the active value.
+        """
         lp = state.lead_profile
         lp.interaction_count += 1
 
+        # Identity — set once, never overwrite
         if extraction.name and not lp.name:
             lp.name = extraction.name
         if extraction.location and not lp.location:
             lp.location = extraction.location
         if extraction.buying_purpose and not lp.buying_purpose:
             lp.buying_purpose = extraction.buying_purpose
-        if extraction.buying_timeline and not lp.buying_timeline:
+
+        # Always overwrite correctable fields when a new value is present
+        if extraction.buying_timeline:
             lp.buying_timeline = extraction.buying_timeline
         if extraction.configuration and not lp.configuration:
             lp.configuration = extraction.configuration
+
+        # Budget: always overwrite (most recent stated budget wins)
         if extraction.budget_min is not None:
             lp.budget_min = extraction.budget_min
         if extraction.budget_max is not None:
             lp.budget_max = extraction.budget_max
+
+        # View / floor / orientation — overwrite with latest explicit statement
+        if extraction.preferred_view:
+            lp.preferred_view = extraction.preferred_view
+        if extraction.preferred_floor:
+            lp.preferred_floor = extraction.preferred_floor
+        if extraction.preferred_orientation:
+            lp.preferred_orientation = extraction.preferred_orientation
+
+        # Phone / WhatsApp
         if extraction.phone and not lp.phone:
             lp.phone = extraction.phone
             lp.whatsapp_number = extraction.phone  # treat as WhatsApp by default
@@ -170,10 +193,9 @@ class ConversationManager:
             if uid not in lp.interested_unit_ids:
                 lp.interested_unit_ids.append(uid)
 
-        # Cross-sync preferences ↔ lead_profile
-        if lp.configuration and not state.preferences.configuration or state.preferences.configuration == "3BHK":
-            if lp.configuration:
-                state.preferences.configuration = lp.configuration
+        # Cross-sync: keep preferences ↔ lead_profile in step
+        if lp.configuration and (not state.preferences.configuration or state.preferences.configuration == "3BHK"):
+            state.preferences.configuration = lp.configuration
         if lp.preferred_view:
             state.preferences.view = lp.preferred_view
         if lp.preferred_floor:

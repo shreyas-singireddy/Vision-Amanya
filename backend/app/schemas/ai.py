@@ -141,6 +141,19 @@ class AIStructuredResponse(BaseModel):
     handoff_id: uuid.UUID | None = Field(None, description="Sales handoff record ID if initiated")
     metadata: dict[str, Any] = Field(default_factory=dict)
 
+    # Phase 7.5: Live lead pipeline state — populated after every chat turn
+    lead_score: int = Field(0, ge=0, le=100, description="Current lead score (0–100)")
+    stage: str = Field("discovery", description="Current ConvStage value")
+    profile_summary: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Live profile snapshot: name, budget, config, stage, etc.",
+    )
+
+    @property
+    def lead_qualification_context(self) -> dict[str, Any]:
+        """Backward-compat alias used by the frontend AIChatDrawer."""
+        return self.profile_summary
+
 
 class AIConversationCreate(BaseModel):
     """Payload for POST /api/v1/ai/conversations."""

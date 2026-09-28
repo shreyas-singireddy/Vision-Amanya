@@ -26,7 +26,7 @@ export interface InteractiveFloorPlanProps {
 export function InteractiveFloorPlan({
   buildingName = "Tower A",
   floorNumber = 10,
-  assetUrl = "/assets/floor-plans/block-plan.jpg",
+  assetUrl = "/assets/amnaya/floor-plans/floor-plan-04.jpg",
   units,
   selectedUnitNumber,
   onSelectUnit,

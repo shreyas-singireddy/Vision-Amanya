@@ -54,8 +54,18 @@ def _load_settings() -> dict[str, Any]:
         }
 
 
-def _build_email_body(lead: Any, handoff: Any = None) -> tuple[str, str]:
-    """Build subject + HTML email body for a lead notification."""
+def _build_email_body(
+    lead: Any,
+    handoff: Any = None,
+    trigger: str | None = None,
+    qualification: str | None = None,
+) -> tuple[str, str]:
+    """Build subject + HTML email body for a lead notification.
+
+    ``trigger`` / ``qualification`` are the canonical values produced by the
+    sales workflow (Phase 7); they are optional so the legacy sales-handoff
+    caller can keep using this builder unchanged.
+    """
     name = getattr(lead, "name", "Unknown") or "Unknown"
     phone = getattr(lead, "whatsapp_number", None) or getattr(lead, "phone", None) or "N/A"
     location = getattr(lead, "location", None) or "—"
@@ -67,6 +77,19 @@ def _build_email_body(lead: Any, handoff: Any = None) -> tuple[str, str]:
     if bmax:
         budget = f"₹{bmax / 10_000_000:.1f} Cr"
     units = getattr(lead, "interested_unit_ids", None) or []
+
+    # Optional sales-workflow provenance rows (Phase 7 internal notification).
+    extra_rows = ""
+    if qualification:
+        extra_rows += (
+            f'      <tr><td style="color:#666;">Qualification</td>'
+            f'<td><strong>{qualification}</strong></td></tr>\n'
+        )
+    if trigger:
+        extra_rows += (
+            f'      <tr style="background:#f9f5ef;"><td style="color:#666;">Sales Trigger</td>'
+            f'<td>{str(trigger).replace("_", " ").title()}</td></tr>\n'
+        )
 
     temp = "Cold"
     if score > 80:
@@ -95,7 +118,7 @@ def _build_email_body(lead: Any, handoff: Any = None) -> tuple[str, str]:
       <tr style="background:#f9f5ef;"><td style="color:#666;">Budget</td><td>{budget}</td></tr>
       <tr><td style="color:#666;">Interested Units</td><td>{', '.join(units) or '—'}</td></tr>
       <tr style="background:#f9f5ef;"><td style="color:#666;">Lead Score</td><td><strong>{score}/100</strong></td></tr>
-    </table>
+{extra_rows}    </table>
     <p style="margin-top:20px;font-size:12px;color:#999;">
       Please follow up within 30 minutes for best conversion.<br>
       Lead ID: {getattr(lead, 'id', '—')}
@@ -120,13 +143,22 @@ class SalesNotificationService:
         self,
         lead: Any,
         handoff: Any = None,
+        trigger: str | None = None,
+        qualification: str | None = None,
     ) -> Any:  # Returns SalesNotification ORM object
-        """Create a notification and attempt delivery on the configured channel."""
+        """Create a notification and attempt delivery on the configured channel.
+
+        Never raises for delivery problems: the outcome is persisted on the
+        ``sales_notifications`` row (``sent`` / ``pending`` / ``failed``) so an
+        internal notification failure can never break the calling flow.
+        """
         from app.models.crm import SalesNotification
         from app.utils.dates import utcnow
 
         cfg = _load_settings()
-        subject, body_html = _build_email_body(lead, handoff)
+        subject, body_html = _build_email_body(
+            lead, handoff, trigger=trigger, qualification=qualification
+        )
         recipients = [r.strip() for r in cfg["recipients"].split(",") if r.strip()]
 
         notification = SalesNotification(

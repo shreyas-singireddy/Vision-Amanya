@@ -10,7 +10,7 @@ Every table in the schema:
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import TIMESTAMP, Uuid, func, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -37,11 +37,13 @@ class TimestampMixin:
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True),
         nullable=False,
+        default=lambda: datetime.now(UTC),
         server_default=func.now(),
     )
     updated_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True),
         nullable=False,
+        default=lambda: datetime.now(UTC),
         server_default=func.now(),
         onupdate=func.now(),
     )

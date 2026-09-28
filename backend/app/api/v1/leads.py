@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import ActiveUser, OptionalUser, Pagination, require_permission
 from app.core.database import get_db
+from app.core.exceptions import ValidationException
 from app.core.response import success_response
 from app.models.enums import LeadPriority, LeadStatus
 from app.permissions import (
@@ -19,8 +20,16 @@ from app.permissions import (
     LEAD_READ,
     LEAD_UPDATE,
 )
-from app.schemas.lead import LeadAssign, LeadCreate, LeadResponse, LeadUpdate
+from app.schemas.lead import (
+    LeadAssign,
+    LeadContext,
+    LeadContextProcessResponse,
+    LeadCreate,
+    LeadResponse,
+    LeadUpdate,
+)
 from app.services.lead_service import LeadService
+from app.services.shortlist_service import ShortlistService
 
 router = APIRouter(prefix="/leads", tags=["leads"])
 
@@ -42,6 +51,23 @@ async def create_lead(
     service = LeadService(db)
     lead = await service.create(payload, actor_id=actor.id)
     return success_response(LeadResponse.model_validate(lead).model_dump(), message="Lead created.")
+
+
+@router.post("/intake")
+async def intake_lead_context(
+    payload: LeadContext,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    user: OptionalUser = None,
+) -> dict:
+    """Intake structured LeadContext: deduplicate, merge preferences, preserve history, and score."""
+    service = LeadService(db)
+    actor_id = user.id if user else None
+    result: LeadContextProcessResponse = await service.process_lead_context(
+        payload,
+        actor_id=actor_id,
+        user_id=actor_id,
+    )
+    return success_response(result.model_dump(), message=result.message)
 
 
 @router.get("", dependencies=[Depends(require_permission(LEAD_READ))])
@@ -90,6 +116,18 @@ async def get_lead(
     service = LeadService(db)
     lead = await service.get(lead_id)
     return success_response(LeadResponse.model_validate(lead).model_dump())
+
+
+@router.get("/{lead_id}/recommendations", dependencies=[Depends(require_permission(LEAD_READ))])
+async def get_lead_recommendations(
+    lead_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    top_n: Annotated[int, Query(ge=1, le=10)] = 3,
+) -> dict:
+    """Generate personalized residence recommendations for a CRM lead based on their preferences."""
+    service = LeadService(db)
+    result = await service.get_recommendations_for_lead(lead_id, top_n=top_n)
+    return success_response(result.model_dump(), message="Personalized recommendations retrieved.")
 
 
 @router.patch("/{lead_id}", dependencies=[Depends(require_permission(LEAD_UPDATE))])
@@ -203,8 +241,9 @@ async def trigger_sales_handoff(
     actor: ActiveUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict:
-    """Trigger the complete sales handoff: update lead status, send WhatsApp, email sales team."""
-    from app.services.sales_notification_service import SalesNotificationService
+    """Trigger the complete sales handoff: update lead status, send WhatsApp, create CRM escalation."""
+    from app.models.enums import SalesTrigger
+    from app.services.sales_task_service import SalesTaskService
     from app.services.whatsapp_service import WhatsAppService
 
     service = LeadService(db)
@@ -214,7 +253,7 @@ async def trigger_sales_handoff(
     if lead.status == LeadStatus.NEW:
         lead = await service.transition(lead_id, LeadStatus.QUALIFIED, actor_id=actor.id)
 
-    # Async: WhatsApp + sales email (fire-and-forget; lead already saved)
+    # Async: WhatsApp + internal sales escalation (fire-and-forget; lead already saved)
     async def _async_tasks() -> None:
         if lead.whatsapp_consent and (lead.whatsapp_number or lead.phone):
             wa = WhatsAppService(db)
@@ -226,8 +265,16 @@ async def trigger_sales_handoff(
                 configuration=lead.configuration,
                 view=lead.preferred_view,
             )
-        notif_svc = SalesNotificationService(db)
-        await notif_svc.notify_new_lead(lead)
+        # Phase 7: the internal notification + CRM task are created through the
+        # isolated sales workflow (idempotent). A staff-initiated handoff is an
+        # explicit escalation, so it bypasses the score floor — the same way the
+        # AI handoff reports an explicit human request.
+        workflow = SalesTaskService(db)
+        await workflow.process_lead_sales_state(
+            lead,
+            actor_id=actor.id,
+            explicit_trigger=SalesTrigger.HUMAN_ASSISTANCE_REQUEST,
+        )
 
     asyncio.create_task(_async_tasks())
 
@@ -235,6 +282,92 @@ async def trigger_sales_handoff(
         LeadResponse.model_validate(lead).model_dump(),
         message="Sales handoff initiated.",
     )
+
+
+# ── Phase 6: WhatsApp Consent + Personalized Shortlist ────────────────────────
+
+@router.post("/{lead_id}/whatsapp/shortlist", dependencies=[Depends(require_permission(LEAD_UPDATE))])
+async def deliver_whatsapp_shortlist(
+    lead_id: uuid.UUID,
+    payload: dict,
+    actor: ActiveUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict:
+    """Deliver personalized residence shortlist to lead via WhatsApp.
+
+    Requires explicit WhatsApp consent (whatsapp_consent=True on lead).
+    Consumes Phase 5 recommendation engine output.
+    Idempotent: duplicate requests within 24h return existing delivery status.
+    """
+    top_n = payload.get("top_n", 3)
+    force_refresh = payload.get("force_refresh", False)
+    conversation_id = payload.get("conversation_id")
+    idempotency_key = payload.get("idempotency_key")
+
+    if conversation_id:
+        try:
+            conversation_id = uuid.UUID(conversation_id)
+        except ValueError:
+            raise ValidationException("Invalid conversation_id format.", error_code="invalid_conversation_id")
+
+    service = ShortlistService(db)
+    result = await service.deliver_shortlist(
+        lead_id=lead_id,
+        top_n=top_n,
+        force_refresh=force_refresh,
+        conversation_id=conversation_id,
+        idempotency_key=idempotency_key,
+    )
+
+    response_data = {
+        "success": result.success,
+        "whatsapp_message_id": str(result.whatsapp_message_id) if result.whatsapp_message_id else None,
+        "status": result.status,
+        "provider_message_id": result.provider_message_id,
+        "units_sent": result.units_sent,
+    }
+
+    if result.error_message:
+        response_data["error"] = result.error_message
+
+    status_code = 200 if result.success else 400
+    return success_response(response_data, message="Shortlist delivery completed." if result.success else result.error_message, status_code=status_code)
+
+
+@router.get("/{lead_id}/whatsapp/shortlist/history", dependencies=[Depends(require_permission(LEAD_READ))])
+async def get_shortlist_delivery_history(
+    lead_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict:
+    """Get WhatsApp shortlist delivery history for a lead."""
+    service = ShortlistService(db)
+    history = await service.get_delivery_status(lead_id)
+    return success_response({"history": history}, message="Delivery history retrieved.")
+
+
+@router.post("/{lead_id}/whatsapp/shortlist/retry", dependencies=[Depends(require_permission(LEAD_UPDATE))])
+async def retry_failed_shortlist(
+    lead_id: uuid.UUID,
+    actor: ActiveUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict:
+    """Retry a failed shortlist delivery."""
+    service = ShortlistService(db)
+    result = await service.retry_failed_delivery(lead_id)
+
+    response_data = {
+        "success": result.success,
+        "whatsapp_message_id": str(result.whatsapp_message_id) if result.whatsapp_message_id else None,
+        "status": result.status,
+        "provider_message_id": result.provider_message_id,
+        "units_sent": result.units_sent,
+    }
+
+    if result.error_message:
+        response_data["error"] = result.error_message
+
+    status_code = 200 if result.success else 400
+    return success_response(response_data, message="Retry completed." if result.success else result.error_message, status_code=status_code)
 
 
 @router.get("/{lead_id}/export", dependencies=[Depends(require_permission(LEAD_READ))])

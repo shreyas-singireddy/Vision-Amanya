@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -73,8 +74,24 @@ class LeadResponse(BaseModel):
     property_id: uuid.UUID | None = None
     project_id: uuid.UUID | None = None
     name: str
-    email: str
+    email: str | None = None
     phone: str | None = None
+    whatsapp_number: str | None = None
+    whatsapp_consent: bool = False
+    location: str | None = None
+    buying_purpose: str | None = None
+    configuration: str | None = None
+    preferred_floor: str | None = None
+    preferred_view: str | None = None
+    preferred_orientation: str | None = None
+    family_size: int | None = None
+    buying_timeline: str | None = None
+    site_visit_interest: bool = False
+    interested_unit_ids: list[str] | None = None
+    recommended_unit_ids: list[str] | None = None
+    viewed_unit_ids: list[str] | None = None
+    compared_unit_ids: list[str] | None = None
+    conversation_id: uuid.UUID | None = None
     status: LeadStatus
     priority: LeadPriority
     source: str | None = None
@@ -96,3 +113,72 @@ class LeadListResponse(BaseModel):
 
     items: list[LeadResponse]
     meta: dict
+
+
+class LeadContext(BaseModel):
+    """Structured lead context extracted from AI conversation or external sources."""
+
+    conversation_id: uuid.UUID | None = None
+    name: str | None = Field(None, max_length=150)
+    email: str | None = Field(None, max_length=255)
+    phone: str | None = Field(None, max_length=30)
+    whatsapp_number: str | None = Field(None, max_length=30)
+    whatsapp_consent: bool | None = None
+    consent_source: str | None = Field("ai_consultant", max_length=50)
+
+    # Buyer profile & intent
+    location: str | None = Field(None, max_length=100)
+    buying_purpose: str | None = Field(None, max_length=50)
+    buying_timeline: str | None = Field(None, max_length=50)
+    configuration: str | None = Field(None, max_length=30)
+    budget_min: float | None = Field(None, ge=0)
+    budget_max: float | None = Field(None, ge=0)
+    preferred_floor: str | None = Field(None, max_length=30)
+    preferred_view: str | None = Field(None, max_length=50)
+    preferred_orientation: str | None = Field(None, max_length=30)
+    family_size: int | None = Field(None, ge=1)
+
+    # Unit interactions
+    interested_unit_ids: list[str] = Field(default_factory=list)
+    viewed_unit_ids: list[str] = Field(default_factory=list)
+    compared_unit_ids: list[str] = Field(default_factory=list)
+    recommended_unit_ids: list[str] = Field(default_factory=list)
+
+    # Intent & engagement
+    intent: str | None = Field(None, max_length=100)
+    secondary_intent: str | None = Field(None, max_length=100)
+    site_visit_interest: bool = False
+    interaction_count: int = 1
+    conversation_summary: str | None = None
+    notes: str | None = None
+    source: str = "ai_consultant"
+
+
+class LeadContextScoreBreakdown(BaseModel):
+    """5-dimension lead scoring breakdown."""
+
+    contact: int = 0
+    intent: int = 0
+    property_fit: int = 0
+    engagement: int = 0
+    action: int = 0
+    total: int = 0
+    temperature: str = "COLD"
+    details: dict[str, Any] = Field(default_factory=dict)
+
+
+class LeadContextProcessResponse(BaseModel):
+    """Result of processing LeadContext through deduplication, history preservation, and scoring."""
+
+    lead_id: uuid.UUID
+    is_created: bool
+    is_updated: bool
+    lead: LeadResponse
+    score_breakdown: LeadContextScoreBreakdown
+    status: LeadStatus
+    temperature: str
+    intent: str | None = None
+    secondary_intent: str | None = None
+    message: str
+
+

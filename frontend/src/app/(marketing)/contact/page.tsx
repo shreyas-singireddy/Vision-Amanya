@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import { projectAssets } from "@config/project";
+import { amnayanMigratedAssets } from "@config/media";
 
 import { Button } from "@components/ui/button";
 import { Alert } from "@components/ui/alert";
@@ -102,8 +103,8 @@ export default function ContactPage() {
       {/* Hero */}
       <HeroReveal
         background={{
-          src: projectAssets.exterior01,
-          alt: "Vision Amnaya — Khajaguda, Hyderabad",
+          src: amnayanMigratedAssets.twilightLakeElevation,
+          alt: "Vision Amnaya — twilight lake view and residential towers, Khajaguda, Hyderabad",
           priority: true,
         }}
         eyebrow={
@@ -281,15 +282,63 @@ export default function ContactPage() {
                 ))}
               </Stagger>
 
-              {/* Location image */}
-              <div className="relative aspect-[4/3] overflow-hidden rounded-card border border-border shadow-card">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={projectAssets.exterior03}
-                  alt="Vision Amnaya — building"
-                  loading="lazy"
-                  className="h-full w-full object-cover"
-                />
+              {/* 3D Architectural Visual — premium layered presentation */}
+              <div className="relative flex flex-col gap-3">
+                {/* Primary — aerial podium view */}
+                <div className="relative overflow-hidden rounded-card-lg border border-border shadow-cinematic aspect-[16/10]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/assets/amnaya/amenities/aerial-basketball.jpg"
+                    alt="Vision Amnaya — aerial view of podium sports deck and amenity spaces"
+                    loading="lazy"
+                    className="h-full w-full object-cover object-center transition-transform duration-700 hover:scale-[1.03]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <span className="text-[0.6rem] font-medium uppercase tracking-[0.2em] text-accent-300">
+                      Aerial View
+                    </span>
+                    <p className="mt-0.5 font-serif text-sm font-medium text-white leading-snug">
+                      Podium Amenity Deck
+                    </p>
+                  </div>
+                </div>
+
+                {/* Secondary — evening event lawn & clubhouse */}
+                <div className="relative overflow-hidden rounded-card border border-border shadow-card aspect-[16/7]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={amnayanMigratedAssets.eventLawn}
+                    alt="Vision Amnaya — evening event lawn and illuminated clubhouse"
+                    loading="lazy"
+                    className="h-full w-full object-cover object-center"
+                    style={{ objectPosition: "center 45%" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-3 left-4 right-4">
+                    <p className="font-serif text-xs font-medium text-white leading-snug">
+                      Clubhouse & Event Lawn · Khajaguda
+                    </p>
+                  </div>
+                </div>
+
+                {/* Fact strip */}
+                <div className="flex items-center justify-between rounded-card border border-border bg-card px-4 py-3">
+                  <div className="text-center">
+                    <p className="text-[0.6rem] font-medium uppercase tracking-[0.16em] text-muted-foreground">Residences</p>
+                    <p className="font-serif text-base font-medium text-foreground">420</p>
+                  </div>
+                  <div className="h-8 w-px bg-border" />
+                  <div className="text-center">
+                    <p className="text-[0.6rem] font-medium uppercase tracking-[0.16em] text-muted-foreground">Clubhouse</p>
+                    <p className="font-serif text-base font-medium text-foreground">25,000 sq.ft.</p>
+                  </div>
+                  <div className="h-8 w-px bg-border" />
+                  <div className="text-center">
+                    <p className="text-[0.6rem] font-medium uppercase tracking-[0.16em] text-muted-foreground">Lake View</p>
+                    <p className="font-serif text-base font-medium text-foreground">25 acres</p>
+                  </div>
+                </div>
               </div>
             </Reveal>
           </div>

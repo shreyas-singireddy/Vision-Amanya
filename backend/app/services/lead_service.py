@@ -13,7 +13,15 @@ from app.core.exceptions import BusinessException, NotFoundException
 from app.models.crm import Lead
 from app.models.enums import LeadPriority, LeadStatus
 from app.repositories.lead import LeadRepository
-from app.schemas.lead import LeadAssign, LeadCreate, LeadUpdate
+from app.schemas.lead import (
+    LeadAssign,
+    LeadContext,
+    LeadContextProcessResponse,
+    LeadContextScoreBreakdown,
+    LeadCreate,
+    LeadResponse,
+    LeadUpdate,
+)
 from app.services.base import BaseService
 from app.utils.audit import write_audit_log
 from app.utils.dates import utcnow
@@ -32,7 +40,10 @@ class LeadService(BaseService):
     async def create(self, payload: LeadCreate, *, actor_id: uuid.UUID | None = None, user_id: uuid.UUID | None = None) -> Lead:
         """Create a lead (optionally linked to the caller's account)."""
         lead = Lead(**payload.model_dump())
-        lead.lead_score = self._score(payload.priority, payload.budget_min, payload.budget_max, payload.phone, payload.interested_in)
+        lead.lead_score = self._compute_score(lead)
+        lead.priority = payload.priority or self._priority_from_score(lead.lead_score)
+        if lead.status == LeadStatus.NEW and lead.lead_score >= 50:
+            lead.status = LeadStatus.QUALIFIED
         lead.user_id = user_id
         await self.leads.add(lead)
         await write_audit_log(
@@ -57,9 +68,19 @@ class LeadService(BaseService):
         old_status = lead.status
         for field, value in data.items():
             setattr(lead, field, value)
-        score_fields = {"priority", "budget_min", "budget_max", "phone", "interested_in"}
+        score_fields = {
+            "priority", "budget_min", "budget_max", "phone", "whatsapp_number",
+            "whatsapp_consent", "configuration", "preferred_view", "preferred_floor",
+            "preferred_orientation", "buying_purpose", "buying_timeline",
+            "site_visit_interest", "interested_unit_ids", "viewed_unit_ids",
+            "compared_unit_ids", "recommended_unit_ids", "interested_in",
+        }
         if score_fields.intersection(data):
-            lead.lead_score = self._score(lead.priority, lead.budget_min, lead.budget_max, lead.phone, lead.interested_in)
+            lead.lead_score = self._compute_score(lead)
+            if "priority" not in data:
+                lead.priority = self._priority_from_score(lead.lead_score)
+            if lead.status == LeadStatus.NEW and lead.lead_score >= 50:
+                lead.status = LeadStatus.QUALIFIED
         if "status" in data and data["status"] != old_status:
             self._apply_status_side_effects(lead, data["status"], previous_status=old_status)
         await write_audit_log(
@@ -212,6 +233,8 @@ class LeadService(BaseService):
             self._apply_profile(existing, profile, conversation_id)
             existing.lead_score = self._compute_score(existing)
             existing.priority = self._priority_from_score(existing.lead_score)
+            if existing.status == LeadStatus.NEW and existing.lead_score >= 50:
+                existing.status = LeadStatus.QUALIFIED
             await write_audit_log(
                 self.db, action="lead.updated_from_conversation",
                 resource_type="lead", resource_id=existing.id,
@@ -232,6 +255,8 @@ class LeadService(BaseService):
         self._apply_profile(lead, profile, conversation_id)
         lead.lead_score = self._compute_score(lead)
         lead.priority = self._priority_from_score(lead.lead_score)
+        if lead.status == LeadStatus.NEW and lead.lead_score >= 50:
+            lead.status = LeadStatus.QUALIFIED
         self.db.add(lead)
         await write_audit_log(
             self.db, action="lead.created_from_conversation",
@@ -271,6 +296,8 @@ class LeadService(BaseService):
             self._apply_profile(existing, profile, conversation_id)
             existing.lead_score = self._compute_score(existing)
             existing.priority = self._priority_from_score(existing.lead_score)
+            if existing.status == LeadStatus.NEW and existing.lead_score >= 50:
+                existing.status = LeadStatus.QUALIFIED
             await self.commit()
             return existing
 
@@ -284,6 +311,8 @@ class LeadService(BaseService):
         self._apply_profile(lead, profile, conversation_id)
         lead.lead_score = self._compute_score(lead)
         lead.priority = self._priority_from_score(lead.lead_score)
+        if lead.status == LeadStatus.NEW and lead.lead_score >= 50:
+            lead.status = LeadStatus.QUALIFIED
         self.db.add(lead)
         await write_audit_log(
             self.db, action="lead.created_from_conversation",
@@ -292,6 +321,299 @@ class LeadService(BaseService):
         )
         await self.commit()
         return lead
+
+    async def process_lead_context(
+        self,
+        context: LeadContext,
+        *,
+        actor_id: uuid.UUID | None = None,
+        user_id: uuid.UUID | None = None,
+    ) -> LeadContextProcessResponse:
+        """Execute end-to-end LeadContext intake & deduplication pipeline.
+
+        Pipeline Stages:
+        1. AI Conversation -> Structured LeadContext
+        2. Find existing lead: match by whatsapp_number, phone, email, or conversation_id
+        3. Existing lead?
+           - No: Create new Lead with baseline fields and preferences
+           - Yes: Update existing Lead (merge preferences, union unit lists, update consent)
+        4. Preserve history: append conversation summary/notes with timestamp, log audit trail
+        5. Ready for scoring: evaluate deterministic 5-dimension score, update temperature and status
+        """
+        from app.ai.lead_scoring import lead_scoring_engine
+
+        existing_lead: Lead | None = None
+
+        # Step 1 & 2: Deduplication lookup
+        # Match 1: WhatsApp number
+        if context.whatsapp_number:
+            stmt = select(Lead).where(
+                (Lead.whatsapp_number == context.whatsapp_number) | (Lead.phone == context.whatsapp_number),
+                Lead.deleted_at.is_(None),
+            )
+            existing_lead = await self.db.scalar(stmt)
+
+        # Match 2: Phone number
+        if not existing_lead and context.phone:
+            stmt = select(Lead).where(
+                (Lead.phone == context.phone) | (Lead.whatsapp_number == context.phone),
+                Lead.deleted_at.is_(None),
+            )
+            existing_lead = await self.db.scalar(stmt)
+
+        # Match 3: Email
+        if not existing_lead and context.email:
+            stmt = select(Lead).where(
+                Lead.email == context.email,
+                Lead.deleted_at.is_(None),
+            )
+            existing_lead = await self.db.scalar(stmt)
+
+        # Match 4: Conversation ID
+        if not existing_lead and context.conversation_id:
+            stmt = select(Lead).where(
+                Lead.conversation_id == context.conversation_id,
+                Lead.deleted_at.is_(None),
+            )
+            existing_lead = await self.db.scalar(stmt)
+
+        is_created = False
+        is_updated = False
+
+        # Step 3: Branch Create vs Update
+        if existing_lead:
+            lead = existing_lead
+            is_updated = True
+
+            # Merge contact fields if newly provided
+            if context.name and (lead.name in (None, "", "Amnaya Visitor") or context.name != "Amnaya Visitor"):
+                lead.name = context.name
+            if context.email and not lead.email:
+                lead.email = context.email
+            if context.phone and not lead.phone:
+                lead.phone = context.phone
+            if context.whatsapp_number:
+                lead.whatsapp_number = context.whatsapp_number
+                if not lead.phone:
+                    lead.phone = context.whatsapp_number
+
+            # WhatsApp consent updates
+            if context.whatsapp_consent is not None:
+                lead.whatsapp_consent = context.whatsapp_consent
+                if context.whatsapp_consent and not lead.consent_timestamp:
+                    lead.consent_timestamp = utcnow()
+                if context.consent_source:
+                    lead.consent_source = context.consent_source
+
+            # Update preference fields if present in context
+            pref_fields = [
+                "location", "buying_purpose", "buying_timeline",
+                "configuration", "preferred_floor", "preferred_view",
+                "preferred_orientation", "family_size"
+            ]
+            for f in pref_fields:
+                val = getattr(context, f, None)
+                if val is not None:
+                    setattr(lead, f, val)
+
+            if context.budget_min is not None:
+                lead.budget_min = context.budget_min
+            if context.budget_max is not None:
+                lead.budget_max = context.budget_max
+            if context.site_visit_interest:
+                lead.site_visit_interest = True
+            if context.conversation_id:
+                lead.conversation_id = context.conversation_id
+
+            # Deduplicate & union unit lists
+            for attr in ["viewed_unit_ids", "interested_unit_ids", "compared_unit_ids", "recommended_unit_ids"]:
+                ctx_units = getattr(context, attr, []) or []
+                if ctx_units:
+                    existing_units = list(getattr(lead, attr) or [])
+                    merged = list(dict.fromkeys(existing_units + ctx_units))
+                    setattr(lead, attr, merged)
+        else:
+            is_created = True
+            phone = context.phone or context.whatsapp_number
+            whatsapp_num = context.whatsapp_number or (phone if context.whatsapp_consent else None)
+            now = utcnow()
+            lead = Lead(
+                id=uuid.uuid4(),
+                created_at=now,
+                updated_at=now,
+                name=context.name or "Amnaya Visitor",
+                email=context.email,
+                phone=phone,
+                whatsapp_number=whatsapp_num,
+                whatsapp_consent=bool(context.whatsapp_consent),
+                consent_timestamp=now if context.whatsapp_consent else None,
+                consent_source=context.consent_source or "ai_consultant",
+                location=context.location,
+                buying_purpose=context.buying_purpose,
+                buying_timeline=context.buying_timeline,
+                configuration=context.configuration,
+                budget_min=context.budget_min,
+                budget_max=context.budget_max,
+                preferred_floor=context.preferred_floor,
+                preferred_view=context.preferred_view,
+                preferred_orientation=context.preferred_orientation,
+                family_size=context.family_size,
+                site_visit_interest=context.site_visit_interest,
+                viewed_unit_ids=list(dict.fromkeys(context.viewed_unit_ids or [])),
+                interested_unit_ids=list(dict.fromkeys(context.interested_unit_ids or [])),
+                compared_unit_ids=list(dict.fromkeys(context.compared_unit_ids or [])),
+                recommended_unit_ids=list(dict.fromkeys(context.recommended_unit_ids or [])),
+                conversation_id=context.conversation_id,
+                user_id=user_id,
+                source=context.source or "ai_consultant",
+                status=LeadStatus.NEW,
+            )
+            self.db.add(lead)
+
+        # Step 4: Preserve history (append timestamped notes/summary and intent)
+        notes_entries = []
+        if context.intent:
+            intent_entry = f"Intent: {context.intent}" + (f" (Secondary: {context.secondary_intent})" if context.secondary_intent else "")
+            notes_entries.append(intent_entry)
+        summary_to_append = (context.conversation_summary or context.notes or "").strip()
+        if summary_to_append:
+            notes_entries.append(summary_to_append)
+
+        if notes_entries:
+            ts = utcnow().strftime("%Y-%m-%d %H:%M UTC")
+            formatted_entry = f"[{ts}] " + " | ".join(notes_entries)
+            if lead.notes:
+                lead.notes = f"{lead.notes}\n\n{formatted_entry}"
+            else:
+                lead.notes = formatted_entry
+
+        # Step 5: Ready for scoring (deterministic 5-dimension evaluation)
+        profile_dict = {
+            "name": lead.name,
+            "phone": lead.phone,
+            "whatsapp_number": lead.whatsapp_number,
+            "whatsapp_consent": lead.whatsapp_consent,
+            "buying_purpose": lead.buying_purpose,
+            "buying_timeline": lead.buying_timeline,
+            "budget_min": float(lead.budget_min) if lead.budget_min is not None else None,
+            "budget_max": float(lead.budget_max) if lead.budget_max is not None else None,
+            "configuration": lead.configuration,
+            "preferred_view": lead.preferred_view,
+            "preferred_floor": lead.preferred_floor,
+            "preferred_orientation": lead.preferred_orientation,
+            "interested_unit_ids": lead.interested_unit_ids or [],
+            "viewed_unit_ids": lead.viewed_unit_ids or [],
+            "compared_unit_ids": lead.compared_unit_ids or [],
+            "recommended_unit_ids": lead.recommended_unit_ids or [],
+            "site_visit_interest": lead.site_visit_interest,
+            "interaction_count": max(1, getattr(context, "interaction_count", 1)),
+        }
+        breakdown = lead_scoring_engine.score(profile_dict)
+        lead.lead_score = breakdown.total
+        lead.priority = self._priority_from_score(lead.lead_score)
+
+        if lead.status == LeadStatus.NEW and breakdown.total >= 50:
+            lead.status = LeadStatus.QUALIFIED
+
+        # Audit logging
+        action_name = "lead.created_from_context" if is_created else "lead.updated_from_context"
+        await write_audit_log(
+            self.db,
+            action=action_name,
+            resource_type="lead",
+            resource_id=lead.id,
+            actor_user_id=actor_id,
+            new_value={
+                "name": lead.name,
+                "phone": lead.phone,
+                "lead_score": lead.lead_score,
+                "status": lead.status.value if hasattr(lead.status, "value") else str(lead.status),
+                "is_created": is_created,
+            },
+        )
+
+        await self.commit()
+        await self.db.refresh(lead)
+
+        # Phase 8: Publish domain events to the EventBus after successful DB commit
+        try:
+            from app.events.bus import event_bus
+            if is_created:
+                from app.events.models import LeadCreatedEvent
+                c_event = LeadCreatedEvent(
+                    lead_id=lead.id,
+                    name=lead.name or "Amnaya Visitor",
+                    phone=lead.phone,
+                    email=lead.email,
+                    whatsapp_number=lead.whatsapp_number,
+                    whatsapp_consent=bool(lead.whatsapp_consent),
+                    configuration=lead.configuration,
+                    budget_min=float(lead.budget_min) if lead.budget_min is not None else None,
+                    budget_max=float(lead.budget_max) if lead.budget_max is not None else None,
+                    lead_score=lead.lead_score,
+                    status=lead.status.value if hasattr(lead.status, "value") else str(lead.status),
+                    priority=lead.priority.value if hasattr(lead.priority, "value") else str(lead.priority),
+                    idempotency_key=f"lead-created-{lead.id}",
+                    correlation_id=context.conversation_id,
+                )
+                await event_bus.publish(c_event, self.db)
+            else:
+                from app.events.models import LeadUpdatedEvent
+                pref_changed = bool(context.configuration or context.budget_max or context.preferred_view or context.preferred_floor)
+                u_event = LeadUpdatedEvent(
+                    lead_id=lead.id,
+                    changed_fields=list(context.model_dump(exclude_unset=True).keys()),
+                    lead_score=lead.lead_score,
+                    status=lead.status.value if hasattr(lead.status, "value") else str(lead.status),
+                    priority=lead.priority.value if hasattr(lead.priority, "value") else str(lead.priority),
+                    configuration=lead.configuration,
+                    budget_max=float(lead.budget_max) if lead.budget_max is not None else None,
+                    preferred_view=lead.preferred_view,
+                    preferred_floor=lead.preferred_floor,
+                    preferred_orientation=lead.preferred_orientation,
+                    preferences_changed=pref_changed,
+                    idempotency_key=f"lead-updated-{lead.id}-{lead.lead_score}",
+                    correlation_id=context.conversation_id,
+                )
+                await event_bus.publish(u_event, self.db)
+        except Exception as exc:
+            import logging
+            logging.getLogger("app.services.lead_service").debug("Event publish skipped/failed: %s", exc)
+
+        score_breakdown_schema = LeadContextScoreBreakdown(
+            contact=breakdown.contact,
+            intent=breakdown.intent,
+            property_fit=breakdown.property_fit,
+            engagement=breakdown.engagement,
+            action=breakdown.action,
+            total=breakdown.total,
+            temperature=breakdown.temperature.value if hasattr(breakdown.temperature, "value") else str(breakdown.temperature),
+            details=breakdown.details,
+        )
+
+        msg = "Lead created and scored successfully." if is_created else "Lead updated and re-scored successfully."
+
+        if lead.id is None:
+            lead.id = uuid.uuid4()
+        if getattr(lead, "created_at", None) is None:
+            lead.created_at = utcnow()
+        if getattr(lead, "updated_at", None) is None:
+            lead.updated_at = utcnow()
+        lead.whatsapp_consent = bool(getattr(lead, "whatsapp_consent", False))
+        lead.site_visit_interest = bool(getattr(lead, "site_visit_interest", False))
+
+        return LeadContextProcessResponse(
+            lead_id=lead.id,
+            is_created=is_created,
+            is_updated=is_updated,
+            lead=LeadResponse.model_validate(lead),
+            score_breakdown=score_breakdown_schema,
+            status=lead.status,
+            temperature=score_breakdown_schema.temperature,
+            intent=context.intent,
+            secondary_intent=context.secondary_intent,
+            message=msg,
+        )
 
     async def record_whatsapp_consent(
         self,
@@ -313,6 +635,22 @@ class LeadService(BaseService):
             new_value={"whatsapp_consent": consent, "consent_source": source},
         )
         await self.commit()
+
+        if consent:
+            try:
+                from app.events.bus import event_bus
+                from app.events.models import WhatsAppConsentGrantedEvent
+                w_event = WhatsAppConsentGrantedEvent(
+                    lead_id=lead.id,
+                    whatsapp_number=lead.whatsapp_number or lead.phone or "",
+                    consent_source=source,
+                    idempotency_key=f"wa-consent-{lead.id}",
+                )
+                await event_bus.publish(w_event, self.db)
+            except Exception as exc:
+                import logging
+                logging.getLogger("app.services.lead_service").debug("Consent event publish skipped: %s", exc)
+
         return lead
 
     async def update_unit_interest(
@@ -335,8 +673,115 @@ class LeadService(BaseService):
             current.append(unit_id)
             setattr(lead, field, current)
             lead.lead_score = self._compute_score(lead)
+            lead.priority = self._priority_from_score(lead.lead_score)
+            if lead.status == LeadStatus.NEW and lead.lead_score >= 50:
+                lead.status = LeadStatus.QUALIFIED
         await self.commit()
         return lead
+
+    async def get_recommendations_for_lead(
+        self,
+        lead_id: uuid.UUID,
+        *,
+        top_n: int = 3,
+        update_lead: bool = True,
+        actor_id: uuid.UUID | None = None,
+    ) -> Any:
+        """Generate deterministic residence recommendations for a CRM lead.
+
+        Maps canonical Lead preferences (budget, configuration, floor, view, orientation)
+        into PropertyPreferences and evaluates matching against PostgreSQL published property inventory.
+        """
+        import logging
+        import time
+        from app.ai.recommendation_engine import RecommendationEngine
+        from app.schemas.ai import PropertyPreferences
+        from app.schemas.recommendation import RecommendationRequest
+
+        logger = logging.getLogger(__name__)
+        start_time = time.perf_counter()
+
+        lead = await self.leads.get_or_404(lead_id)
+
+        # Parse bedrooms from configuration
+        bedrooms = 3
+        if lead.configuration:
+            config_str = str(lead.configuration).upper()
+            if "4" in config_str:
+                bedrooms = 4
+            elif "2" in config_str:
+                bedrooms = 2
+            elif "3" in config_str:
+                bedrooms = 3
+
+        prefs = PropertyPreferences(
+            configuration=lead.configuration or "3BHK",
+            bedrooms=bedrooms,
+            minimum_budget=float(lead.budget_min) if lead.budget_min is not None else None,
+            maximum_budget=float(lead.budget_max) if lead.budget_max is not None else None,
+            budget=float(lead.budget_max) if lead.budget_max is not None else None,
+            floor_preference=lead.preferred_floor.lower() if lead.preferred_floor else None,
+            view=lead.preferred_view.lower() if lead.preferred_view else None,
+            orientation=lead.preferred_orientation.lower() if lead.preferred_orientation else None,
+            buying_purpose=lead.buying_purpose,
+            timeline=lead.buying_timeline,
+        )
+
+        engine = RecommendationEngine(self.db)
+        request = RecommendationRequest(
+            preferences=prefs,
+            top_n=top_n,
+        )
+        response = await engine.recommend(request)
+        elapsed_ms = (time.perf_counter() - start_time) * 1000.0
+
+        # Extract recommended unit numbers or IDs
+        rec_units = [u.unit_number for u in response.recommendations]
+        if not rec_units and response.alternatives:
+            rec_units = [u.unit_number for u in response.alternatives]
+
+        logger.info(
+            "Personalized recommendations generated for lead %s: %d matches (%d total matches, %d alternatives, %.2f ms)",
+            lead.id,
+            len(response.recommendations),
+            response.total_matches,
+            len(response.alternatives),
+            elapsed_ms,
+            extra={
+                "lead_id": str(lead.id),
+                "total_matches": response.total_matches,
+                "top_recommendations_count": len(response.recommendations),
+                "alternatives_count": len(response.alternatives),
+                "constraint_relaxed": response.constraint_relaxed,
+                "execution_ms": elapsed_ms,
+            },
+        )
+
+        if update_lead and rec_units:
+            current_recommended = list(lead.recommended_unit_ids or [])
+            merged = list(dict.fromkeys(current_recommended + rec_units))
+            lead.recommended_unit_ids = merged
+            lead.lead_score = self._compute_score(lead)
+            lead.priority = self._priority_from_score(lead.lead_score)
+            if lead.status == LeadStatus.NEW and lead.lead_score >= 50:
+                lead.status = LeadStatus.QUALIFIED
+
+            await write_audit_log(
+                self.db,
+                action="lead.recommendations_generated",
+                resource_type="lead",
+                resource_id=lead.id,
+                actor_user_id=actor_id,
+                new_value={
+                    "recommended_unit_ids": lead.recommended_unit_ids,
+                    "lead_score": lead.lead_score,
+                    "matches_count": len(response.recommendations),
+                    "constraint_relaxed": response.constraint_relaxed,
+                },
+            )
+            await self.commit()
+
+        return response
 
     @staticmethod
     def generate_sales_summary(lead: Lead) -> str:

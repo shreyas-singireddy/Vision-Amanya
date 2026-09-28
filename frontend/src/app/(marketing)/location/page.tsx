@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { ctaConfig } from "@config/cta";
 import { projectAssets } from "@config/project";
+import { amnayanMigratedAssets } from "@config/media";
 
 import { Eyebrow } from "@components/ui/heading";
 
@@ -99,14 +100,14 @@ export default function LocationPage() {
           <div className="lg:col-span-7">
             <Reveal className="flex flex-col gap-6">
               <ImageReveal
-                src={projectAssets.exterior01}
-                alt="Amnaya — aerial perspective of the Khajaguda site"
+                src={amnayanMigratedAssets.twilightLakeElevation}
+                alt="Vision Amnaya — aerial perspective over Khajaguda lake setting"
                 aspect="landscape"
                 sizes="(min-width: 1024px) 58vw, 100vw"
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Aerial perspective — Vision Amnaya site, Khajaguda, Hyderabad
+                Aerial perspective — Vision Amnaya site and lake catchment, Khajaguda, Hyderabad
               </p>
             </Reveal>
           </div>

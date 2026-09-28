@@ -9,6 +9,7 @@ import { Section, SectionHeader } from "@components/layout/section";
 import { HeroReveal, HeroRule, WordReveal, Reveal } from "@components/motion";
 import { ResidenceCard } from "@components/property/residence-card";
 import { ResidenceComparison } from "@components/amnaya/residences/ResidenceComparison";
+import { ResidenceArchitecturalExplorer } from "@components/amnaya/residence-explorer";
 import { CtaSection } from "@components/layout/cta-section";
 import { ctaConfig } from "@config/cta";
 
@@ -55,6 +56,10 @@ export default async function ResidencesDirectoryPage() {
         depth
         overlay
       />
+
+      {/* Interactive 2D ↔ 3D Architectural Floor Plan Explorer (Phase 1 Foundation) */}
+      <ResidenceArchitecturalExplorer />
+
 
       {/* Overview */}
       <Section id="residences-grid" spacing="lg" tone="light">

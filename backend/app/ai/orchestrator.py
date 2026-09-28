@@ -122,12 +122,38 @@ class AIOrchestrator:
         resolved_context = await ContextResolver(db_session).resolve(context)
 
         sanitized_input = guardrails.sanitize_input(user_message)
+
+        # ── Phase 7.5: Profile extraction + stage machine ─────────────────────
+        from app.ai.profile_extractor import profile_extractor
+        from app.ai.conversation_manager import ConversationManager
+        from app.ai.lead_scoring import lead_scoring_engine
+
+        state = ConversationManager.get_or_create(conversation_id)
+
+        # Extract profile signals from this message
+        extraction = profile_extractor.extract(
+            user_message,
+            recommendations=[
+                u.get("unit_number") for u in (state.last_recommendations or [])
+                if isinstance(u, dict)
+            ],
+            awaiting_consent=state.awaiting_consent,
+            awaiting_phone=state.awaiting_phone,
+        )
+        ConversationManager.update_lead_profile(state, extraction)
+        ConversationManager.advance_stage(state)
+
+        # Recompute lead score after profile update
+        score_result = lead_scoring_engine.score(state.lead_profile.model_dump())
+        state.lead_profile.lead_score = score_result.total
+        # ──────────────────────────────────────────────────────────────────────
+
         intent_result = intent_engine.classify(sanitized_input, history=history, context=context)
         intent = intent_result.intent
 
         # 0. Handoff & Sales Consultant Escalation Triggers
         if intent == "human_handoff":
-            return AIStructuredResponse(
+            return self._enrich_response(state, AIStructuredResponse(
                 conversation_id=conversation_id,
                 message="Of course. I can connect you with an Amnaya sales consultant who can assist you directly.",
                 response_type=AIResponseType.HANDOFF,
@@ -142,10 +168,10 @@ class AIOrchestrator:
                     "title": "Speak with an Amnaya Sales Consultant",
                     "description": "A member of our sales team can assist you with availability, pricing discussions, and private site visits.",
                 },
-            )
+            ))
 
         if intent == "negotiation_request":
-            return AIStructuredResponse(
+            return self._enrich_response(state, AIStructuredResponse(
                 conversation_id=conversation_id,
                 message="Pricing flexibility can depend on current sales terms and inventory schedule. I can connect you with an Amnaya sales consultant to discuss this with you.",
                 response_type=AIResponseType.HANDOFF,
@@ -160,10 +186,10 @@ class AIOrchestrator:
                     "title": "Pricing & Sales Terms Discussion",
                     "description": "Our sales team can evaluate current payment plans and terms for your preferred residence.",
                 },
-            )
+            ))
 
         if intent == "unknown_verified_information":
-            return AIStructuredResponse(
+            return self._enrich_response(state, AIStructuredResponse(
                 conversation_id=conversation_id,
                 message="I don't have verified information on that specific detail in our knowledge base. I can connect you with an Amnaya sales consultant who can provide exact details.",
                 response_type=AIResponseType.HANDOFF,
@@ -178,10 +204,10 @@ class AIOrchestrator:
                     "title": "Consultant Escalation",
                     "description": "Connect with our team for details beyond the standard digital factsheet.",
                 },
-            )
+            ))
 
         if intent == "custom_requirement":
-            return AIStructuredResponse(
+            return self._enrich_response(state, AIStructuredResponse(
                 conversation_id=conversation_id,
                 message="Custom layout modifications and bespoke requirements are reviewed directly by our architectural and sales teams. Would you like me to connect you with a consultant?",
                 response_type=AIResponseType.HANDOFF,
@@ -195,11 +221,11 @@ class AIOrchestrator:
                     "title": "Bespoke Residence Consultation",
                     "description": "Discuss custom spatial requirements with Amnaya real estate specialists.",
                 },
-            )
+            ))
 
         # 1. Unsupported Out-of-Scope Requests
         if intent == "unsupported_request":
-            return AIStructuredResponse(
+            return self._enrich_response(state, AIStructuredResponse(
                 conversation_id=conversation_id,
                 message=intent_result.clarification_prompt or "I am the Amnaya AI Consultant. I can only assist with Vision Amnaya luxury residences, specifications, lake views, and site visits.",
                 response_type=AIResponseType.CLARIFICATION,
@@ -209,29 +235,29 @@ class AIOrchestrator:
                     AISuggestedAction(label="Explore 3 BHK Residences", action_type="navigate", payload={"url": "/residences"}),
                     AISuggestedAction(label="Schedule Site Visit", action_type="site_visit", payload={}),
                 ],
-            )
+            ))
 
         # 7. Pricing & Financial Calculations (deterministic backend calculator only)
         if intent in ("pricing_information", "emi_calculation", "loan_calculation", "affordability_check"):
-            return await self._handle_financial(conversation_id, sanitized_input, intent, intent_result)
+            return self._enrich_response(state, await self._handle_financial(conversation_id, sanitized_input, intent, intent_result))
 
         # 2. Site Visit & Lead Capture (real availability service)
         if intent in ("site_visit", "lead_capture", "site_visit_request", "site_visit_booking", "sales_conversion"):
-            return await self._handle_site_visit(conversation_id, intent, intent_result)
+            return self._enrich_response(state, await self._handle_site_visit(conversation_id, intent, intent_result))
 
         # 3. Unit Recommendation, Refinement, Rejection & Paged Search (real inventory)
         if intent in ("unit_recommendation", "unit_search", "refine_recommendation", "show_more_units", "reject_unit", "select_unit"):
-            return await self._handle_recommendation(
+            return self._enrich_response(state, await self._handle_recommendation(
                 conversation_id, user_message, sanitized_input, intent, intent_result, db_session
-            )
+            ))
 
         # 4. Unit Comparison (grounded in published inventory)
         if intent == "unit_comparison":
-            return await self._handle_comparison(conversation_id, intent, intent_result, db_session)
+            return self._enrich_response(state, await self._handle_comparison(conversation_id, intent, intent_result, db_session))
 
         # 5. Floor Plan & Spatial Visualization (grounded in published inventory)
         if intent in ("floor_plan_information", "floor_plan_navigation", "locate_unit", "show_3d"):
-            return await self._handle_floor_plan(conversation_id, intent, intent_result, db_session)
+            return self._enrich_response(state, await self._handle_floor_plan(conversation_id, intent, intent_result, db_session))
 
         # 6. Knowledge questions & general conversation - grounded in verified RAG context only.
         rag = await self.get_rag_context(sanitized_input, session=db_session)
@@ -239,7 +265,7 @@ class AIOrchestrator:
         insufficient = (not rag) or rag.get("insufficient_context", True)
 
         if insufficient or not chunks:
-            return AIStructuredResponse(
+            return self._enrich_response(state, AIStructuredResponse(
                 conversation_id=conversation_id,
                 message=(
                     "I don't have verified Amnaya information for that yet. "
@@ -258,7 +284,7 @@ class AIOrchestrator:
                     "description": "Connect directly with our sales team for details beyond the verified knowledge base.",
                 },
                 metadata={"rag_insufficient": True},
-            )
+            ))
 
         # Compose a strictly extractive answer from retrieved verified chunks.
         lines: list[str] = []
@@ -280,7 +306,7 @@ class AIOrchestrator:
             )
         raw_text = "Here is what our verified Amnaya information covers:\n" + "\n".join(lines)
         is_valid, validated_text = guardrails.validate_facts(raw_text, context={"prompt": sanitized_input})
-        return AIStructuredResponse(
+        return self._enrich_response(state, AIStructuredResponse(
             conversation_id=conversation_id,
             message=validated_text,
             response_type=AIResponseType.TEXT if is_valid else AIResponseType.ERROR,
@@ -292,7 +318,89 @@ class AIOrchestrator:
             ],
             citations=citations,
             metadata={"rag_sources": rag.get("sources", [])},
-        )
+        ))
+
+    # ── Phase 7.5: Response enrichment & stage-prompt injection ───────────────
+
+    @staticmethod
+    def _enrich_response(
+        state: Any,
+        response: "AIStructuredResponse",
+    ) -> "AIStructuredResponse":
+        """Attach live pipeline state to the response and optionally append a
+        stage-aware follow-up question to the AI message."""
+        from app.ai.conversation_manager import ConversationManager
+        profile_summary = ConversationManager.get_profile_summary(state)
+        response.lead_score = state.lead_profile.lead_score
+        response.stage = state.stage.value
+        response.profile_summary = profile_summary
+        response.lead_context = profile_summary
+
+        # Append a single non-repetitive follow-up nudge based on current stage
+        follow_up = AIOrchestrator._inject_stage_prompt(state)
+        if follow_up:
+            response.message = response.message.rstrip() + "\n\n" + follow_up
+
+        return response
+
+    @staticmethod
+    def _inject_stage_prompt(state: Any) -> str | None:
+        """Return a single, natural follow-up question appropriate for the current
+        ConvStage. Each question is asked at most once per conversation."""
+        from app.ai.conversation_manager import ConversationManager
+        from app.models.enums import ConvStage
+
+        stage = state.stage
+        lp = state.lead_profile
+
+        # Discovery: get name first
+        if stage == ConvStage.DISCOVERY and not lp.name and not ConversationManager.has_asked(state, "name"):
+            ConversationManager.mark_asked(state, "name")
+            return "May I know your name so I can personalise your experience?"
+
+        # Profile building: location
+        if stage == ConvStage.PROFILE_BUILDING and not lp.location and not ConversationManager.has_asked(state, "location"):
+            ConversationManager.mark_asked(state, "location")
+            return "Where are you currently based?"
+
+        # Profile building: buying purpose
+        if stage == ConvStage.PROFILE_BUILDING and not lp.buying_purpose and not ConversationManager.has_asked(state, "purpose"):
+            ConversationManager.mark_asked(state, "purpose")
+            return "Is this residence for your own use, investment, or a second home?"
+
+        # Requirement discovery: configuration
+        if stage == ConvStage.REQUIREMENT_DISCOVERY and not lp.configuration and not ConversationManager.has_asked(state, "configuration"):
+            ConversationManager.mark_asked(state, "configuration")
+            return "What configuration are you looking for — 3 BHK or 4 BHK?"
+
+        # Requirement discovery: timeline
+        if stage == ConvStage.REQUIREMENT_DISCOVERY and not lp.buying_timeline and not ConversationManager.has_asked(state, "timeline"):
+            ConversationManager.mark_asked(state, "timeline")
+            return "What is your approximate buying timeline?"
+
+        # Contact permission: WhatsApp consent
+        if (
+            stage == ConvStage.CONTACT_PERMISSION
+            and not state.whatsapp_declined
+            and lp.whatsapp_consent is None
+            and not ConversationManager.has_asked(state, "whatsapp_consent")
+        ):
+            ConversationManager.mark_asked(state, "whatsapp_consent")
+            state.awaiting_consent = True
+            return "Would you like me to send you the shortlisted residences on WhatsApp for easy reference?"
+
+        # Contact capture: phone number
+        if (
+            stage == ConvStage.CONTACT_CAPTURE
+            and lp.whatsapp_consent is True
+            and not lp.whatsapp_number
+            and not ConversationManager.has_asked(state, "phone")
+        ):
+            ConversationManager.mark_asked(state, "phone")
+            state.awaiting_phone = True
+            return "Could you share your WhatsApp number so I can send the shortlist?"
+
+        return None
 
     async def _handle_financial(
         self,

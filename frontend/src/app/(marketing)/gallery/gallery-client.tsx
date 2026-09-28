@@ -9,78 +9,149 @@ import { Container } from "@components/ui/container";
 import { Reveal, HoverReveal } from "@components/motion";
 import { GalleryLightbox, type GalleryItem } from "@components/project/gallery-lightbox";
 
+import { amnayanMigratedAssets } from "@config/media";
+
 const allGalleryItems: GalleryItem[] = [
+  /* ── Exterior Renders ─────────────────────────────────────────── */
   {
-    src: projectAssets.hero,
-    alt: "Amnaya — Hero Architectural Render",
+    src: amnayanMigratedAssets.twilightLakeElevation,
+    alt: "Amnaya — Twilight Lake Elevation",
     category: "Exterior",
-    caption: "Flagship 3-BHK luxury towers in Khajaguda",
+    caption: "Multi-tower residential elevation mirrored across lake waters at blue hour",
   },
   {
-    src: projectAssets.exterior01,
-    alt: "Amnaya — Aerial Campus View",
+    src: amnayanMigratedAssets.streetLevelExterior,
+    alt: "Amnaya — Street-Level Architectural Frontage",
     category: "Exterior",
-    caption: "5.3 Acres site layout framed by green expanse",
+    caption: "Full tower facade seen from arterial road with lush podium landscaping",
   },
   {
-    src: projectAssets.exterior03,
-    alt: "Amnaya — Dusk Architectural Elevation",
+    src: amnayanMigratedAssets.daytimeLakeElevation,
+    alt: "Amnaya — Daytime Lake-Front View",
     category: "Exterior",
-    caption: "Deep balconies and architectural facade lighting",
+    caption: "Calm mirror reflection of towers across the 25-acre natural lake",
   },
   {
-    src: projectAssets.entrance,
-    alt: "Amnaya — Double-Height Stilt Entrance",
+    src: amnayanMigratedAssets.goldenHourLakeElevation,
+    alt: "Amnaya — Golden-Hour Lake Horizon",
+    category: "Exterior",
+    caption: "Warm morning light over natural wetland lake fringe with water lilies and reeds",
+  },
+
+  /* ── Arrival ──────────────────────────────────────────────────── */
+  {
+    src: amnayanMigratedAssets.entranceGate,
+    alt: "Amnaya — Grand Arrival Gate",
     category: "Arrival",
-    caption: "Grand arrival concourse framing the central garden",
+    caption: "Cantilevered drop-off canopy and illuminated 'Vision Amnaya' branded portal wall",
   },
+
+  /* ── Landscape & Nature ───────────────────────────────────────── */
   {
-    src: projectAssets.landscape,
-    alt: "Amnaya — 2-Acre Central Garden",
+    src: amnayanMigratedAssets.communityGarden,
+    alt: "Amnaya — Community Garden Promenade",
     category: "Landscape",
-    caption: "Landscaped green buffer separating towers from entry",
+    caption: "Paved walking promenade with flowering canopy trees, giant chess, and leisure zones",
   },
   {
-    src: projectAssets.lake,
-    alt: "Amnaya — 25-Acre Lake View",
-    category: "Nature",
-    caption: "Unobstructed northern view over Osman Sagar catchment",
+    src: amnayanMigratedAssets.podiumCourtyard,
+    alt: "Amnaya — Podium Garden Courtyard",
+    category: "Landscape",
+    caption: "Geometric paved plaza with manicured lawn islands and raised architectural planters",
   },
   {
-    src: projectAssets.interior01,
-    alt: "Amnaya — Living Room Suite",
-    category: "Interiors",
-    caption: "High ceilings and generous 1,715–2,590 sq.ft. layouts",
+    src: amnayanMigratedAssets.gardenCourtyard,
+    alt: "Amnaya — Clubhouse Garden Courtyard",
+    category: "Landscape",
+    caption: "Green lawn courtyard framed by the ground-floor clubhouse glass facade",
   },
+
+  /* ── Amenities ────────────────────────────────────────────────── */
   {
-    src: projectAssets.interior02,
-    alt: "Amnaya — Master Bedroom Suite",
-    category: "Interiors",
-    caption: "Daylight-filled bedrooms designed for quiet rest",
-  },
-  {
-    src: projectAssets.amenities,
-    alt: "Amnaya — 25,000 sq.ft. Clubhouse",
-    category: "Amenities",
-    caption: "Four levels of indoor sports, spa, and leisure",
-  },
-  {
-    src: projectAssets.pool,
+    src: amnayanMigratedAssets.rooftopPool,
     alt: "Amnaya — Rooftop Swimming Pool",
     category: "Amenities",
-    caption: "Panoramic rooftop pool overlooking the lake horizon",
+    caption: "Panoramic rooftop pool overlooking the lake horizon and residential towers",
+  },
+  {
+    src: amnayanMigratedAssets.outdoorGym,
+    alt: "Amnaya — Open-Air Fitness Station",
+    category: "Amenities",
+    caption: "Full workout circuit integrated into the podium landscape",
+  },
+  {
+    src: amnayanMigratedAssets.pickleballCourt,
+    alt: "Amnaya — Pickleball Court",
+    category: "Amenities",
+    caption: "Dedicated regulation court with lush jacaranda tree perimeter",
+  },
+  {
+    src: amnayanMigratedAssets.cricketNet,
+    alt: "Amnaya — Cricket Practice Net",
+    category: "Amenities",
+    caption: "Covered batting and bowling turf net surrounded by landscaped gardens",
+  },
+  {
+    src: amnayanMigratedAssets.basketballCourt,
+    alt: "Amnaya — Half Basketball Court",
+    category: "Amenities",
+    caption: "Podium half court with acrylic sports surface and perimeter lighting",
+  },
+  {
+    src: amnayanMigratedAssets.joggingTrack,
+    alt: "Amnaya — Landscaped Jogging Track",
+    category: "Amenities",
+    caption: "Winding fitness path through flowering shrub beds and palms",
+  },
+  {
+    src: amnayanMigratedAssets.kidsPlayground,
+    alt: "Amnaya — Children's Play Zone",
+    category: "Amenities",
+    caption: "Adventure play area with climbing wall, rope bridge, and safety surfacing",
+  },
+  {
+    src: amnayanMigratedAssets.petPark,
+    alt: "Amnaya — Dedicated Pet Park",
+    category: "Amenities",
+    caption: "Secured pet-friendly open lawn with agility play obstacles",
+  },
+  {
+    src: amnayanMigratedAssets.eventLawn,
+    alt: "Amnaya — Evening Banquet Lawn",
+    category: "Amenities",
+    caption: "Open-air celebration lawn with fairy lights and clubhouse illumination",
+  },
+  {
+    src: amnayanMigratedAssets.swingLounge,
+    alt: "Amnaya — Canopy Swing Lounge",
+    category: "Amenities",
+    caption: "Relaxed open-air lounge with hanging egg chairs under steel canopy",
+  },
+  {
+    src: amnayanMigratedAssets.aerialBasketball,
+    alt: "Amnaya — Podium Sports Deck",
+    category: "Amenities",
+    caption: "Elevated perspective of the sports courts and spectator seating steps",
+  },
+
+  /* ── Masterplan & Architectural Plans ─────────────────────────── */
+  {
+    src: amnayanMigratedAssets.aerialAmenityZone,
+    alt: "Amnaya — Aerial Amenity Zone Plan",
+    category: "Plans",
+    caption: "Bird's-eye overhead layout showing sports courts, play park, and marked jogging track",
   },
   {
     src: projectAssets.masterplan01,
     alt: "Amnaya — Site Masterplan",
     category: "Plans",
-    caption: "Official site layout showing towers, garden & clubhouse",
+    caption: "Official 5.3-acre site layout showing towers, central garden & clubhouse footprint",
   },
   {
     src: projectAssets.floorplans,
-    alt: "Amnaya — 3 BHK Floor Plan",
+    alt: "Amnaya — 3 BHK Typology Plan",
     category: "Plans",
-    caption: "Optimized 3-bedroom spatial layout",
+    caption: "Optimized 3-bedroom spatial layout with deep balconies",
   },
 ];
 

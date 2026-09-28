@@ -12,8 +12,9 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers
-revision = "20260825_0200_phase_75_lead_qualification"
-down_revision = "20260825_0100_add_ai_rag_chunks"
+# NOTE: the revision id must fit ``alembic_version.version_num`` (VARCHAR(32)).
+revision = "20260825_0200_phase75_lead_qual"
+down_revision = "20260825_0100"
 branch_labels = None
 depends_on = None
 

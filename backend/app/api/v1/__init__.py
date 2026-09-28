@@ -5,6 +5,7 @@ from app.api.v1.ai import router as ai_router
 from app.api.v1.analytics import router as analytics_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.bookings import router as bookings_router
+from app.api.v1.crm import router as crm_router
 from app.api.v1.enquiries import router as enquiries_router
 from app.api.v1.favorites import router as favorites_router
 from app.api.v1.leads import router as leads_router
@@ -21,6 +22,7 @@ __all__ = [
     "analytics_router",
     "auth_router",
     "bookings_router",
+    "crm_router",
     "enquiries_router",
     "favorites_router",
     "handoff_router",

@@ -14,6 +14,7 @@ from app.repositories.analytics_event import AnalyticsEventRepository
 from app.repositories.app_setting import AppSettingRepository
 from app.repositories.auth_token import AuthTokenRepository
 from app.repositories.booking import BookingRepository
+from app.repositories.crm_task import CrmTaskRepository
 from app.repositories.enquiry import EnquiryRepository
 from app.repositories.favorite import FavoriteRepository
 from app.repositories.lead import LeadRepository
@@ -22,6 +23,7 @@ from app.repositories.project import ProjectRepository
 from app.repositories.property import PropertyRepository
 from app.repositories.rbac import RbacRepository
 from app.repositories.review import ReviewRepository
+from app.repositories.sales_notification import SalesNotificationRepository
 from app.repositories.user import UserRepository
 
 __all__ = [
@@ -30,6 +32,7 @@ __all__ = [
     "AppSettingRepository",
     "AuthTokenRepository",
     "BookingRepository",
+    "CrmTaskRepository",
     "EnquiryRepository",
     "FavoriteRepository",
     "LeadRepository",
@@ -38,5 +41,6 @@ __all__ = [
     "PropertyRepository",
     "RbacRepository",
     "ReviewRepository",
+    "SalesNotificationRepository",
     "UserRepository",
 ]

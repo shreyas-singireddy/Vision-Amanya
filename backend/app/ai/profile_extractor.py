@@ -15,12 +15,20 @@ Supported extractions:
 - WhatsApp consent (yes/no)
 - Unit interest (I like A-1203, interested in unit B-1402)
 - Site visit interest
+- View preference (lake, garden, city, pool)
+- Floor preference (high, mid, low)
+- Orientation (east, west, north, south facing)
+
+Each extracted field is tagged with a FieldSource indicating whether
+it was STATED (explicitly mentioned) or NORMALIZED (deterministically
+derived). UNKNOWN is used when nothing could be extracted.
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Optional
 
 
@@ -52,9 +60,13 @@ _BUDGET_PATTERNS = [
 ]
 
 # ── Configuration patterns ────────────────────────────────────────────────────
+_NUM_WORDS = {
+    "one": "1", "two": "2", "three": "3", "four": "4", "five": "5", "six": "6",
+    "1": "1", "2": "2", "3": "3", "4": "4", "5": "5", "6": "6",
+}
 _CONFIG_PATTERN = re.compile(
-    r"\b([2-6])\s*(?:bhk|bedroom|bed\s*room|br)\b"
-    r"|\b([2-6])BHK\b"
+    r"\b(one|two|three|four|five|six|[1-6])\s*(?:-|\s)?\s*(?:bhk|bedroom|bedrooms|bed\s*room|br)\b"
+    r"|\b([1-6])BHK\b"
     r"|\b(studio|1rk|1\s*rk)\b",
     re.IGNORECASE,
 )
@@ -67,6 +79,15 @@ _NAME_PATTERNS = [
     re.compile(r"^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*(?:here|speaking|this\s+side)?\s*[.,!]?\s*$"),
     re.compile(r"^([A-Z][a-z]+)\s*$"),  # single-word message that is a name
 ]
+
+_NON_NAME_WORDS = {
+    "looking", "interested", "amnaya", "okay", "sure", "bangalore",
+    "hyderabad", "mumbai", "delhi", "pune", "searching", "planning",
+    "trying", "buying", "here", "ready", "willing", "hoping", "just",
+    "exploring", "new", "moving", "going", "thinking", "wanting",
+    "calling", "speaking", "fine", "good", "hello", "hi", "hey",
+    "need", "needing", "for", "a", "an", "the", "around", "and", "to",
+}
 
 # ── Phone/WhatsApp number patterns ───────────────────────────────────────────
 _PHONE_PATTERN = re.compile(
@@ -109,11 +130,29 @@ _PURPOSE_SECOND_HOME = re.compile(
 
 # ── Timeline patterns ─────────────────────────────────────────────────────────
 _TIMELINE_PATTERNS = {
-    "immediately": re.compile(r"\b(?:immediately|asap|right\s+away|urgently)\b", re.IGNORECASE),
-    "1-3 months": re.compile(r"\b(?:1|2|3)\s*(?:-|to)\s*(?:3|4)\s*month", re.IGNORECASE),
-    "3-6 months": re.compile(r"\b(?:3|4|5|6)\s*(?:-|to)\s*(?:6|7|8)\s*month", re.IGNORECASE),
-    "6-12 months": re.compile(r"\b(?:6|7|8|9|10|11|12)\s*month|\b(?:half|one)\s*year\b", re.IGNORECASE),
-    "just exploring": re.compile(r"\b(?:exploring|researching|just\s+looking|not\s+sure|no\s+rush|sometime|later|future|right\s+now)\b", re.IGNORECASE),
+    "immediately": re.compile(
+        r"\b(?:immediately|asap|right\s+away|urgently|ready\s+to\s+move|immediate)\b",
+        re.IGNORECASE,
+    ),
+    "1-3 months": re.compile(
+        r"\b(?:within|in|under|around|next)?\s*(?:1|2|3|one|two|three|90\s*days)\s*(?:month|months|days)\b"
+        r"|\b(?:1|2|3)\s*(?:-|to)\s*(?:3|4)\s*month",
+        re.IGNORECASE,
+    ),
+    "3-6 months": re.compile(
+        r"\b(?:within|in|under|around|next)?\s*(?:3|4|5|6|three|four|five|six)\s*(?:month|months)\b"
+        r"|\b(?:3|4|5|6)\s*(?:-|to)\s*(?:6|7|8)\s*month",
+        re.IGNORECASE,
+    ),
+    "6-12 months": re.compile(
+        r"\b(?:within|in|under|around|next)?\s*(?:6|7|8|9|10|11|12)\s*(?:month|months)\b|\b(?:half|one)\s*year\b"
+        r"|\b(?:6|7|8|9|10|11|12)\s*(?:-|to)\s*(?:12|18)\s*month",
+        re.IGNORECASE,
+    ),
+    "just exploring": re.compile(
+        r"\b(?:exploring|researching|just\s+looking|not\s+sure|no\s+rush|sometime|later|future)\b",
+        re.IGNORECASE,
+    ),
 }
 
 # ── Site visit patterns ───────────────────────────────────────────────────────
@@ -122,23 +161,116 @@ _SITE_VISIT_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# ── View preference patterns ──────────────────────────────────────────────────
+_VIEW_PATTERNS: dict[str, re.Pattern[str]] = {
+    "lake": re.compile(
+        r"\b(?:lake[\s-]?(?:view|facing)|lake|lakeside|lake\s+front)\b", re.IGNORECASE
+    ),
+    "garden": re.compile(
+        r"\b(?:garden[\s-]?(?:view|facing)|garden|greenery\s+view)\b", re.IGNORECASE
+    ),
+    "city": re.compile(
+        r"\b(?:city[\s-]?(?:view|facing)|city\s+view|skyline)\b", re.IGNORECASE
+    ),
+    "pool": re.compile(
+        r"\b(?:pool[\s-]?(?:view|facing)|swimming\s+pool\s+view)\b", re.IGNORECASE
+    ),
+}
+
+# ── Floor preference patterns ─────────────────────────────────────────────────
+_FLOOR_HIGH = re.compile(
+    r"\b(?:high(?:er)?\s+floor|upper\s+floor|top\s+floor|above\s+(?:floor\s+)?\d{1,2}|"
+    r"(?:floor\s+)?\d{1,2}\s*(?:th|st|nd|rd)?\s+(?:or\s+)?(?:above|higher|up))\b",
+    re.IGNORECASE,
+)
+_FLOOR_LOW = re.compile(
+    r"\b(?:low(?:er)?\s+floor|ground\s+floor|floor\s+1|first\s+floor|"
+    r"(?:floor\s+)?\d{1,2}\s*(?:th|st|nd|rd)?\s+(?:or\s+)?(?:below|lower|down))\b",
+    re.IGNORECASE,
+)
+_FLOOR_MID = re.compile(
+    r"\b(?:mid(?:dle)?\s+floor|mid-?floor|intermediate\s+floor)\b", re.IGNORECASE
+)
+
+# ── Orientation patterns ──────────────────────────────────────────────────────
+_ORIENTATION_PATTERNS: dict[str, re.Pattern[str]] = {
+    "east": re.compile(r"\b(?:east[\s-]?facing|east\s+side|facing\s+east)\b", re.IGNORECASE),
+    "west": re.compile(r"\b(?:west[\s-]?facing|west\s+side|facing\s+west)\b", re.IGNORECASE),
+    "north": re.compile(r"\b(?:north[\s-]?facing|north\s+side|facing\s+north)\b", re.IGNORECASE),
+    "south": re.compile(r"\b(?:south[\s-]?facing|south\s+side|facing\s+south)\b", re.IGNORECASE),
+    "north-east": re.compile(r"\b(?:north[\s-]?east[\s-]?facing|ne[\s-]?facing)\b", re.IGNORECASE),
+    "north-west": re.compile(r"\b(?:north[\s-]?west[\s-]?facing|nw[\s-]?facing)\b", re.IGNORECASE),
+}
+
+# ── Single-message timeline override: "actually …" correction markers ─────────
+_CORRECTION_MARKERS = re.compile(
+    r"\b(?:actually|correction|i\s+meant|sorry|not\s+\S+\s+but|instead|changed\s+my\s+mind|wait)\b",
+    re.IGNORECASE,
+)
+
+
+
+class FieldSource(str, Enum):
+    """Provenance tag for an extracted field value.
+
+    STATED     — the visitor explicitly mentioned the value in their message.
+    NORMALIZED — the value was deterministically derived from an explicit
+                 statement (e.g. '2.5 crore' → 25_000_000 INR).
+    UNKNOWN    — the field was not present in the message.
+
+    INFERRED is deliberately absent: the extractor never guesses.
+    """
+
+    STATED = "stated"
+    NORMALIZED = "normalized"
+    UNKNOWN = "unknown"
+
 
 @dataclass
 class ExtractionResult:
-    """All profile fields that could be extracted from a single message."""
+    """All profile fields that could be extracted from a single message.
 
+    Only fields that are present in the message are non-None.
+    ``sources`` maps field names to their FieldSource provenance.
+    """
+
+    # Identity
     name: Optional[str] = None
     location: Optional[str] = None
+    phone: Optional[str] = None
+
+    # Budget — stored as raw INR float after normalization
     budget_min: Optional[float] = None
     budget_max: Optional[float] = None
+
+    # Property requirements
     configuration: Optional[str] = None
-    buying_purpose: Optional[str] = None
-    buying_timeline: Optional[str] = None
-    phone: Optional[str] = None
+    preferred_view: Optional[str] = None       # lake | garden | city | pool
+    preferred_floor: Optional[str] = None      # high | mid | low
+    preferred_orientation: Optional[str] = None  # east | west | north | south
+
+    # Buying intent
+    buying_purpose: Optional[str] = None       # self_use | investment | second_home
+    buying_timeline: Optional[str] = None      # canonical label from _TIMELINE_PATTERNS
+
+    # Consent & actions
     whatsapp_consent: Optional[bool] = None
-    interested_unit_ids: list[str] = field(default_factory=list)
     site_visit_interest: Optional[bool] = None
+    interested_unit_ids: list[str] = field(default_factory=list)
+
+    # Provenance — maps field name → FieldSource
+    sources: dict[str, FieldSource] = field(default_factory=dict)
+
+    # Raw input preserved for audit/logging
     raw_text: str = ""
+
+    def mark(self, field_name: str, source: FieldSource) -> None:
+        """Record the provenance of a successfully extracted field."""
+        self.sources[field_name] = source
+
+    def is_known(self, field_name: str) -> bool:
+        """Return True if the field was extracted (source != UNKNOWN)."""
+        return self.sources.get(field_name, FieldSource.UNKNOWN) != FieldSource.UNKNOWN
 
 
 class ProfileExtractor:
@@ -158,12 +290,11 @@ class ProfileExtractor:
             m = pattern.search(t)
             if m:
                 name = m.group(1).strip()
+                words = [w.lower() for w in re.findall(r"\b[a-zA-Z]+\b", name)]
                 # Filter out common non-name words
-                if name.lower() not in {
-                    "looking", "interested", "amnaya", "okay", "sure",
-                    "bangalore", "hyderabad", "mumbai", "delhi", "pune",
-                }:
-                    return name.title()
+                if not words or any(w in _NON_NAME_WORDS for w in words):
+                    continue
+                return name.title()
         return None
 
     # ── Location ──────────────────────────────────────────────────────────────
@@ -246,7 +377,8 @@ class ProfileExtractor:
             return None
         if m.group(3):
             return m.group(3).upper().replace(" ", "")
-        beds = m.group(1) or m.group(2)
+        raw_beds = m.group(1) or m.group(2)
+        beds = _NUM_WORDS.get(raw_beds.lower(), raw_beds)
         return f"{beds}BHK"
 
     # ── Buying purpose ────────────────────────────────────────────────────────
@@ -378,6 +510,54 @@ class ProfileExtractor:
         """Return True if the message expresses site visit interest."""
         return bool(_SITE_VISIT_PATTERN.search(text))
 
+    # ── View preference ───────────────────────────────────────────────────────
+
+    @staticmethod
+    def extract_view_preference(text: str) -> Optional[str]:
+        """Extract preferred view: lake | garden | city | pool.
+
+        Returns the canonical label or None if not found.
+        Checks longer/more-specific patterns first (north-east before east).
+        """
+        for label, pattern in _VIEW_PATTERNS.items():
+            if pattern.search(text):
+                return label
+        return None
+
+    # ── Floor preference ──────────────────────────────────────────────────────
+
+    @staticmethod
+    def extract_floor_preference(text: str) -> Optional[str]:
+        """Extract floor preference: high | mid | low."""
+        if _FLOOR_HIGH.search(text):
+            return "high"
+        if _FLOOR_LOW.search(text):
+            return "low"
+        if _FLOOR_MID.search(text):
+            return "mid"
+        return None
+
+    # ── Orientation ───────────────────────────────────────────────────────────
+
+    @staticmethod
+    def extract_orientation(text: str) -> Optional[str]:
+        """Extract facing/orientation: east | west | north | south | north-east | north-west."""
+        # Check compound directions first (longest match wins)
+        for label in ("north-east", "north-west", "north", "south", "east", "west"):
+            if label in _ORIENTATION_PATTERNS and _ORIENTATION_PATTERNS[label].search(text):
+                return label
+        return None
+
+    # ── Correction detection ──────────────────────────────────────────────────
+
+    @staticmethod
+    def is_correction(text: str) -> bool:
+        """Return True if this message is likely correcting a previous statement.
+
+        Used by update_lead_profile to allow overwriting budget/timeline.
+        """
+        return bool(_CORRECTION_MARKERS.search(text))
+
     # ── Full extraction ───────────────────────────────────────────────────────
 
     def extract(
@@ -387,27 +567,94 @@ class ProfileExtractor:
         awaiting_consent: bool = False,
         awaiting_phone: bool = False,
     ) -> ExtractionResult:
-        """Run all extractors on a single message and return aggregated result."""
+        """Run all extractors on a single message and return a sourced result.
+
+        Every non-None field in ExtractionResult is tagged with FieldSource.STATED
+        (the visitor explicitly said it) or FieldSource.NORMALIZED (deterministically
+        derived from a stated value, e.g. raw INR from '2.5 crore').
+
+        Rules:
+        - Never infer. If not in the text, the field is None / UNKNOWN.
+        - Budget and timeline are always overwritten (correction support).
+        - Phone is only extracted when awaiting_phone=True.
+        """
         result = ExtractionResult(raw_text=text)
 
-        result.name = self.extract_name(text)
-        result.location = self.extract_location(text)
-        result.configuration = self.extract_configuration(text)
-        result.buying_purpose = self.extract_purpose(text)
-        result.buying_timeline = self.extract_timeline(text)
-        result.interested_unit_ids = self.extract_unit_interest(text, recommendations)
-        result.site_visit_interest = self.extract_site_visit_interest(text) or None
+        # ── Identity ──────────────────────────────────────────────────────────
+        name = self.extract_name(text)
+        if name:
+            result.name = name
+            result.mark("name", FieldSource.STATED)
 
+        location = self.extract_location(text)
+        if location:
+            result.location = location
+            result.mark("location", FieldSource.STATED)
+
+        # ── Property requirements ─────────────────────────────────────────────
+        config = self.extract_configuration(text)
+        if config:
+            result.configuration = config
+            result.mark("configuration", FieldSource.STATED)
+
+        view = self.extract_view_preference(text)
+        if view:
+            result.preferred_view = view
+            result.mark("preferred_view", FieldSource.STATED)
+
+        floor = self.extract_floor_preference(text)
+        if floor:
+            result.preferred_floor = floor
+            result.mark("preferred_floor", FieldSource.STATED)
+
+        orientation = self.extract_orientation(text)
+        if orientation:
+            result.preferred_orientation = orientation
+            result.mark("preferred_orientation", FieldSource.STATED)
+
+        # ── Budget (always NORMALIZED — user states crore/lakh, we store INR) ─
         bmin, bmax = self.extract_budget(text)
-        result.budget_min = bmin
-        result.budget_max = bmax
+        if bmin is not None:
+            result.budget_min = bmin
+            result.mark("budget_min", FieldSource.NORMALIZED)
+        if bmax is not None:
+            result.budget_max = bmax
+            result.mark("budget_max", FieldSource.NORMALIZED)
 
-        # Phone extraction: only run when actively waiting for phone
+        # ── Buying intent ─────────────────────────────────────────────────────
+        purpose = self.extract_purpose(text)
+        if purpose:
+            result.buying_purpose = purpose
+            result.mark("buying_purpose", FieldSource.STATED)
+
+        timeline = self.extract_timeline(text)
+        if timeline:
+            result.buying_timeline = timeline
+            result.mark("buying_timeline", FieldSource.STATED)
+
+        # ── Unit interest ─────────────────────────────────────────────────────
+        units = self.extract_unit_interest(text, recommendations)
+        if units:
+            result.interested_unit_ids = units
+            result.mark("interested_unit_ids", FieldSource.STATED)
+
+        # ── Site visit ────────────────────────────────────────────────────────
+        if self.extract_site_visit_interest(text):
+            result.site_visit_interest = True
+            result.mark("site_visit_interest", FieldSource.STATED)
+
+        # ── Phone (only when actively requesting it) ──────────────────────────
         if awaiting_phone:
-            result.phone = self.extract_phone(text)
+            phone = self.extract_phone(text)
+            if phone:
+                result.phone = phone
+                result.mark("phone", FieldSource.NORMALIZED)  # raw → E.164
 
-        # WhatsApp consent: run when actively waiting for consent, or if explicit
-        result.whatsapp_consent = self.extract_whatsapp_consent(text)
+        # ── WhatsApp consent ──────────────────────────────────────────────────
+        consent = self.extract_whatsapp_consent(text)
+        if consent is not None:
+            result.whatsapp_consent = consent
+            result.mark("whatsapp_consent", FieldSource.STATED)
 
         return result
 

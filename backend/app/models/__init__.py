@@ -13,6 +13,7 @@ from app.models.chat import (
     KnowledgeDocument,
 )
 from app.models.crm import Booking, Enquiry, Lead, Review, SalesHandoff, WhatsAppMessage, SalesNotification
+from app.models.crm_task import CrmTask
 from app.models.property import (
     Amenity,
     Favorite,
@@ -51,6 +52,7 @@ __all__ = [
     "Booking",
     "ChatMessage",
     "ChatSession",
+    "CrmTask",
     "Enquiry",
     "Favorite",
     "FileUpload",

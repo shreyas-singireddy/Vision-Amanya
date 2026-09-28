@@ -13,6 +13,8 @@ import { useAIContext } from "@providers/AIContextProvider";
 import { executeAIAction } from "@lib/ai/ai-actions";
 import type { AIStructuredResponse, AISuggestedAction } from "@domain/assistant";
 import { LeadProfilePanel } from "./LeadProfilePanel";
+import { WhatsAppConsentCard } from "./WhatsAppConsentCard";
+import { ShortlistTrigger } from "./ShortlistTrigger";
 import type { ConversationLeadProfile } from "./LeadProfilePanel";
 
 interface MessageItem {
@@ -27,6 +29,7 @@ export function AIChatDrawer() {
     isDrawerOpen,
     closeDrawer,
     activeContext,
+    activeConversationId,
     suggestedPrompts,
     sendQuery,
     isLoading,
@@ -43,6 +46,7 @@ export function AIChatDrawer() {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [leadProfile, setLeadProfile] = useState<ConversationLeadProfile>({});
+  const [leadId, setLeadId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll on new message
@@ -78,9 +82,27 @@ export function AIChatDrawer() {
     const assistantMsgId = `assistant-${Date.now()}`;
     if (response) {
       // Phase 7.5: extract and merge lead qualification context
-      const ctx = (response as any).lead_qualification_context;
+      // `profile_summary` is the canonical field; fall back to legacy key for safety
+      const ctx =
+        (response as any).profile_summary ??
+        (response as any).lead_qualification_context;
       if (ctx && typeof ctx === "object") {
-        setLeadProfile((prev) => ({ ...prev, ...ctx }));
+        setLeadProfile((prev) => ({
+          ...prev,
+          ...ctx,
+          // Merge top-level lead_score and stage if present
+          ...(typeof (response as any).lead_score === "number"
+            ? { lead_score: (response as any).lead_score }
+            : {}),
+          ...(typeof (response as any).stage === "string"
+            ? { stage: (response as any).stage }
+            : {}),
+        }));
+
+        // Capture lead_id and conversation_id for WhatsApp features
+        if ((response as any).lead_id) {
+          setLeadId((response as any).lead_id);
+        }
       }
 
       setMessages((prev) => [
@@ -172,6 +194,26 @@ export function AIChatDrawer() {
 
         {/* Phase 7.5: Lead Profile Panel — shown when 2+ fields collected */}
         <LeadProfilePanel profile={leadProfile} />
+
+        {/* Phase 6: WhatsApp Consent Card — shown when stage is CONTACT_PERMISSION and consent not yet set */}
+        {leadProfile.stage === "contact_permission" && leadProfile.whatsapp_consent === undefined && (
+          <WhatsAppConsentCard
+            profile={leadProfile}
+            conversationId={activeConversationId || ""}
+            onConsentChange={(granted) => {
+              setLeadProfile((prev) => ({ ...prev, whatsapp_consent: granted }));
+            }}
+          />
+        )}
+
+        {/* Phase 6: Shortlist Trigger — shown when consent granted, phone exists, and units selected */}
+        {leadProfile.whatsapp_consent === true && leadProfile.interested_units && leadProfile.interested_units.length > 0 && leadId && (
+          <ShortlistTrigger
+            profile={leadProfile}
+            leadId={leadId}
+            conversationId={activeConversationId || undefined}
+          />
+        )}
 
         {/* Messages Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">

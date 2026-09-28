@@ -15,6 +15,7 @@ from app.services.notification_service import NotificationService
 from app.services.project_service import ProjectService
 from app.services.property_service import PropertyService
 from app.services.review_service import ReviewService
+from app.services.shortlist_service import ShortlistService
 from app.services.user_service import UserService
 from app.services.handoff_service import HandoffService
 
@@ -31,5 +32,6 @@ __all__ = [
     "ProjectService",
     "PropertyService",
     "ReviewService",
+    "ShortlistService",
     "UserService",
 ]

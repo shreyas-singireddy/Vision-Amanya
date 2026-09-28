@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { ctaConfig } from "@config/cta";
 import { projectAssets, projectFacts } from "@config/project";
+import { amnayanMigratedAssets } from "@config/media";
 
 import { Eyebrow, DisplayHeading } from "@components/ui/heading";
 
@@ -52,8 +53,8 @@ export default function MasterplanPage() {
       {/* Hero */}
       <HeroReveal
         background={{
-          src: projectAssets.exterior01,
-          alt: "Amnaya — aerial view of the development site",
+          src: amnayanMigratedAssets.aerialAmenityZone,
+          alt: "Vision Amnaya — aerial bird's-eye amenity zone and site plan",
           priority: true,
         }}
         eyebrow={

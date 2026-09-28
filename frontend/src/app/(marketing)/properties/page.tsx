@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ctaConfig } from "@config/cta";
 import { projectAssets } from "@config/project";
+import { amnayanMigratedAssets } from "@config/media";
 import { routes } from "@constants/routes";
 
 import { Button } from "@components/ui/button";
@@ -21,6 +22,8 @@ import {
 } from "@components/motion";
 
 import { FloorPlanExplorer, type FloorPlan } from "@components/property/floor-plan-explorer";
+
+import { ResidenceArchitecturalExplorer } from "@components/amnaya/residence-explorer";
 
 export const metadata: Metadata = {
   title: "Residences — Amnaya by Vision Infra",
@@ -95,8 +98,8 @@ const features = [
     desc: "Large enough for a sitting area. Lake-facing in the Type B and C configurations.",
   },
   {
-    src: projectAssets.lifestyle,
-    alt: "Amnaya — lifestyle and community",
+    src: amnayanMigratedAssets.communityGarden,
+    alt: "Vision Amnaya — community garden promenade with leisure avenues and flowering canopies",
     title: "Community",
     desc: "Life at Amnaya extends beyond the front door — the clubhouse, garden, and lake are your extended living space.",
   },
@@ -137,6 +140,9 @@ export default function PropertiesPage() {
         depth
         overlay
       />
+
+      {/* Master Interactive 2D ↔ 3D Residence & Floor Plan Explorer */}
+      <ResidenceArchitecturalExplorer />
 
       {/* Residence overview */}
       <Section id="overview" spacing="lg" tone="light">

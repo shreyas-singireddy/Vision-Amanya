@@ -40,7 +40,7 @@ export const navigationConfig: NavigationConfig = {
     { label: "The Project", href: "/project" },
     { label: "Location", href: "/location" },
     { label: "Amenities", href: "/amenities" },
-    { label: "Residences", href: "/properties" },
+    { label: "Residences", href: "/residences" },
     { label: "Masterplan", href: "/masterplan" },
     { label: "Gallery", href: "/gallery" },
   ],
@@ -55,7 +55,7 @@ export const navigationConfig: NavigationConfig = {
       links: [
         { label: "Home", href: "/" },
         { label: "The Project", href: "/project" },
-        { label: "Residences", href: "/properties" },
+        { label: "Residences", href: "/residences" },
         { label: "Amenities", href: "/amenities" },
         { label: "Masterplan", href: "/masterplan" },
         { label: "Gallery", href: "/gallery" },

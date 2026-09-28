@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 import { ctaConfig } from "@config/cta";
-import { projectAssets, projectConfig, projectFacts } from "@config/project";
+import { projectConfig, projectFacts } from "@config/project";
+import { amnayanMigratedAssets } from "@config/media";
 
 import { Eyebrow, DisplayHeading } from "@components/ui/heading";
 
@@ -25,8 +26,8 @@ export default function ProjectPage() {
       {/* Hero */}
       <HeroReveal
         background={{
-          src: projectAssets.exterior01,
-          alt: "Amnaya — aerial view of the development",
+          src: amnayanMigratedAssets.twilightLakeElevation,
+          alt: "Vision Amnaya — aerial lake-front elevation at twilight",
           priority: true,
         }}
         eyebrow={
@@ -88,8 +89,8 @@ export default function ProjectPage() {
         title="Contemporary architecture, permanent material"
         body="The Amnaya towers are designed for the long view. The architecture favors solid geometry over decoration — controlled rhythms of facade panels, recessed balconies that provide shade without sacrificing view, and a material palette that ages well in the Hyderabad climate."
         image={{
-          src: projectAssets.architecture,
-          alt: "Amnaya — architectural design concept",
+          src: amnayanMigratedAssets.streetLevelExterior,
+          alt: "Vision Amnaya — architectural frontage and street approach",
         }}
         className="py-section"
       />
@@ -102,8 +103,8 @@ export default function ProjectPage() {
           title="The double-height stilt entrance"
           body="Every resident's experience of Amnaya begins at the stilt level — a double-height covered arrival forecourt that frames the garden and, beyond it, the lake. The scale of this space sets the register for everything that follows."
           image={{
-            src: projectAssets.entrance,
-            alt: "Amnaya — double-height stilt entrance",
+            src: amnayanMigratedAssets.entranceGate,
+            alt: "Vision Amnaya — grand arrival gate with cantilevered drop-off canopy and branded wall",
           }}
         />
       </Section>
@@ -111,8 +112,8 @@ export default function ProjectPage() {
       {/* Media band */}
       <MediaBand
         image={{
-          src: projectAssets.exterior04,
-          alt: "Amnaya — building front elevation",
+          src: amnayanMigratedAssets.goldenHourLakeElevation,
+          alt: "Vision Amnaya — golden-hour lake elevation with natural water lilies",
         }}
         eyebrow="Amnaya"
         title="Khajaguda, Hyderabad"
@@ -134,8 +135,8 @@ export default function ProjectPage() {
                 daily use.
               </p>
               <ImageReveal
-                src={projectAssets.landscape}
-                alt="Amnaya — 2-acre landscape garden"
+                src={amnayanMigratedAssets.communityGarden}
+                alt="Vision Amnaya — 2-acre central garden promenade and leisure avenues"
                 aspect="landscape"
                 sizes="(min-width: 1024px) 45vw, 100vw"
                 className="mt-4 w-full"
@@ -155,8 +156,8 @@ export default function ProjectPage() {
                 life at Amnaya.
               </p>
               <ImageReveal
-                src={projectAssets.lake}
-                alt="Amnaya — 25-acre lake view"
+                src={amnayanMigratedAssets.daytimeLakeElevation}
+                alt="Vision Amnaya — 25-acre natural lake view and reflection"
                 aspect="landscape"
                 delay={0.2}
                 sizes="(min-width: 1024px) 45vw, 100vw"

@@ -371,3 +371,38 @@ class AssignmentStrategy(StrEnum):
     MANUAL_ASSIGNMENT = "manual_assignment"
 
 
+class SalesTrigger(StrEnum):
+    """Meaningful business states that escalate a lead to the sales team.
+
+    These are *not* new thresholds: ``HIGH_INTENT_LEAD`` / ``HOT_LEAD`` are the
+    canonical Phase 4 lead-temperature bands produced by
+    :mod:`app.ai.lead_scoring`, while the remaining values mirror signals that
+    already exist in the domain model (``Lead.site_visit_interest`` and
+    ``HandoffReason``).
+    """
+
+    HIGH_INTENT_LEAD = "high_intent_lead"
+    HOT_LEAD = "hot_lead"
+    SITE_VISIT_REQUEST = "site_visit_request"
+    HUMAN_ASSISTANCE_REQUEST = "human_assistance_request"
+    MANUAL = "manual"
+
+
+class CrmTaskType(StrEnum):
+    """Kind of internal sales follow-up work created by the CRM."""
+
+    CONTACT_QUALIFIED_LEAD = "contact_qualified_lead"
+    HOT_LEAD_FOLLOW_UP = "hot_lead_follow_up"
+    SITE_VISIT_COORDINATION = "site_visit_coordination"
+    MANUAL = "manual"
+
+
+class CrmTaskStatus(StrEnum):
+    """Lifecycle of an internal CRM task (never customer-visible)."""
+
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+

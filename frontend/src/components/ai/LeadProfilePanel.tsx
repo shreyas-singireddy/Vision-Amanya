@@ -14,6 +14,10 @@ import React, { useEffect, useState } from "react";
 
 export interface ConversationLeadProfile {
   name?: string;
+  phone?: string;
+  email?: string;
+  whatsapp_number?: string;
+  whatsapp_consent?: boolean;
   location?: string;
   purpose?: string;
   configuration?: string;

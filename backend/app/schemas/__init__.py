@@ -20,6 +20,16 @@ from app.schemas.auth import (
     VerifyEmailRequest,
 )
 from app.schemas.booking import BookingCreate, BookingListResponse, BookingResponse, BookingUpdate
+from app.schemas.crm_task import (
+    CrmTaskAssign,
+    CrmTaskCreate,
+    CrmTaskListResponse,
+    CrmTaskResponse,
+    CrmTaskUpdate,
+    SalesNotificationResponse,
+    SalesTriggerRequest,
+    SalesWorkflowResponse,
+)
 from app.schemas.enquiry import (
     EnquiryCreate,
     EnquiryListResponse,
@@ -80,6 +90,11 @@ __all__ = [
     "BookingResponse",
     "BookingUpdate",
     "ChangePasswordRequest",
+    "CrmTaskAssign",
+    "CrmTaskCreate",
+    "CrmTaskListResponse",
+    "CrmTaskResponse",
+    "CrmTaskUpdate",
     "DashboardStats",
     "EnquiryCreate",
     "EnquiryListResponse",
@@ -119,6 +134,9 @@ __all__ = [
     "ReviewModerate",
     "ReviewResponse",
     "ReviewUpdate",
+    "SalesNotificationResponse",
+    "SalesTriggerRequest",
+    "SalesWorkflowResponse",
     "SystemStats",
     "TokenPair",
     "UserAdminUpdate",

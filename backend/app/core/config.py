@@ -105,6 +105,18 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = "no-reply@visionamanya.in"
 
+    # --- Internal sales workflow (sales notification + CRM task automation) --
+    # Channel for internal sales-team notifications. ``pending_only`` stores the
+    # notification record without attempting delivery (never silently lost).
+    SALES_NOTIFICATION_CHANNEL: str = "pending_only"  # "email" | "pending_only"
+    SALES_NOTIFICATION_EMAIL: str = "no-reply@visionamanya.in"
+    SALES_TEAM_RECIPIENTS: str = ""
+    # Minimum canonical lead temperature (Phase 4 bands) that escalates to the
+    # sales team automatically: "hot" (61+) or the stricter "high_intent" (81+).
+    SALES_TRIGGER_MIN_TEMPERATURE: str = "hot"
+    # Follow-up SLA used for the created CRM task due time.
+    SALES_TASK_DUE_MINUTES: int = 30
+
     # --- AI / Chatbot ------------------------------------------------------
     OPENAI_API_KEY: str = ""
     OPENAI_API_BASE: str = "https://api.openai.com/v1"

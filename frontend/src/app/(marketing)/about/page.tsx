@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ctaConfig } from "@config/cta";
-import { projectAssets } from "@config/project";
 import { routes } from "@constants/routes";
+import { amnayanMigratedAssets } from "@config/media";
 
 import { Button } from "@components/ui/button";
 import { Eyebrow, DisplayHeading } from "@components/ui/heading";
@@ -49,8 +49,8 @@ export default function AboutPage() {
       {/* Hero */}
       <HeroReveal
         background={{
-          src: projectAssets.exterior02,
-          alt: "Vision Amnaya — architecture",
+          src: amnayanMigratedAssets.streetLevelExterior,
+          alt: "Vision Amnaya — architectural street elevation and approach",
           priority: true,
         }}
         eyebrow={
@@ -100,8 +100,8 @@ export default function AboutPage() {
 
           <div className="lg:col-span-7">
             <ImageReveal
-              src={projectAssets.architecture}
-              alt="Vision Amnaya — architectural quality"
+              src={amnayanMigratedAssets.gardenCourtyard}
+              alt="Vision Amnaya — podium garden courtyard and glazed clubhouse pavilion"
               aspect="landscape"
               sizes="(min-width: 1024px) 58vw, 100vw"
               className="w-full"
@@ -141,8 +141,8 @@ export default function AboutPage() {
       {/* Media band */}
       <MediaBand
         image={{
-          src: projectAssets.entrance,
-          alt: "Amnaya — the double-height stilt entrance",
+          src: amnayanMigratedAssets.entranceGate,
+          alt: "Vision Amnaya — grand arrival gate with cantilevered canopy and branded signage",
         }}
         eyebrow="Vision Amnaya"
         title="The project in practice"

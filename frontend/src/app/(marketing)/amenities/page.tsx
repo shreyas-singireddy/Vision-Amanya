@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
 
 import { ctaConfig } from "@config/cta";
-import { projectAssets, amenityGroups, featuredAmenities } from "@config/project";
+import { amenityGroups, featuredAmenities } from "@config/project";
+import { amnayanMigratedAssets } from "@config/media";
 
 import { Container } from "@components/ui/container";
-
 import { Section, SectionHeader } from "@components/layout/section";
-import { SplitSection } from "@components/layout/split-section";
-import { MediaBand } from "@components/layout/media-band";
 import { CtaSection } from "@components/layout/cta-section";
-
 import { HeroReveal, HeroRule, WordReveal, Reveal } from "@components/motion";
+
+import { AmenityExperienceSection } from "./_sections/amenity-experience-section";
+import { AmenityCollectionGrid } from "./_sections/amenity-collection-grid";
 
 export const metadata: Metadata = {
   title: "Amenities — Amnaya by Vision Infra",
   description:
-    "25,000 sq.ft. clubhouse, rooftop swimming pool, badminton courts, gym, spa and more at Amnaya, Khajaguda, Hyderabad.",
+    "Explore the 25,000 sq.ft. Amnaya clubhouse spine interactively — rooftop swimming pool, sports courts, gym, spa, children's play area, pet park, jogging track and more at Khajaguda, Hyderabad.",
 };
 
 export default function AmenitiesPage() {
@@ -24,8 +24,8 @@ export default function AmenitiesPage() {
       {/* Hero */}
       <HeroReveal
         background={{
-          src: projectAssets.amenities,
-          alt: "Amnaya amenities — overview",
+          src: amnayanMigratedAssets.rooftopPool,
+          alt: "Vision Amnaya — rooftop swimming pool overlooking lake horizon and clubhouse spine",
           priority: true,
         }}
         eyebrow={
@@ -68,31 +68,13 @@ export default function AmenitiesPage() {
         </Container>
       </section>
 
-      {/* Clubhouse */}
-      <Section id="clubhouse" spacing="lg" tone="light">
-        <SplitSection
-          eyebrow="Clubhouse"
-          title="The 25,000 sq.ft. clubhouse"
-          body="The Amnaya clubhouse anchors the community's social life. A full floor of shared space — fitness facilities, sports courts, meeting spaces, and leisure rooms — designed so that residents never have to leave the campus for any recreational pursuit."
-          image={{
-            src: projectAssets.clubhouse01,
-            alt: "Amnaya — clubhouse interior",
-          }}
-        />
-      </Section>
+      {/* ── INTERACTIVE 3D AMENITY EXPERIENCE ─────────────────────────────── */}
+      <AmenityExperienceSection />
 
-      {/* Pool */}
-      <MediaBand
-        image={{
-          src: projectAssets.pool,
-          alt: "Amnaya — rooftop swimming pool",
-        }}
-        eyebrow="Amenities"
-        title="Rooftop swimming pool"
-        height="default"
-      />
+      {/* ── AMENITY COLLECTION GRID ───────────────────────────────────────── */}
+      <AmenityCollectionGrid />
 
-      {/* Amenity groups grid */}
+      {/* Clubhouse amenity groups */}
       <Section id="all-amenities" spacing="lg" tone="subtle">
         <SectionHeader eyebrow="All Amenities" title="Everything in one place" align="center" />
 
@@ -123,20 +105,6 @@ export default function AmenitiesPage() {
             </Reveal>
           ))}
         </div>
-      </Section>
-
-      {/* Clubhouse continued */}
-      <Section id="clubhouse-detail" spacing="lg" tone="light">
-        <SplitSection
-          reversed
-          eyebrow="Wellness"
-          title="Spa, salon, and meditation"
-          body="The wellness wing of the Amnaya clubhouse is designed for daily use — not occasion visits. The spa, salon, and dedicated meditation and yoga room sit adjacent to the gym and aerobics studio, so a complete wellness routine is a short walk from your front door."
-          image={{
-            src: projectAssets.clubhouse02,
-            alt: "Amnaya — clubhouse amenities continued",
-          }}
-        />
       </Section>
 
       {/* CTA */}
